@@ -1,0 +1,3 @@
+# The deleted IS row was referenced by D&A on the cash flow statement and in the DCF.
+CF!F6:J6 = =IS!#REF!
+DCF!F8:J8 = =IS!#REF!

@@ -1,0 +1,2 @@
+# Stock-based compensation (row 13) was added after the total was written.
+IS!C14:J14 = =SUM(C11:C12)
