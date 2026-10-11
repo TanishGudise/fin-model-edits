@@ -1,7 +1,8 @@
 """Make eval outputs safe to publish. Run after every `uv run eval`, before committing.
 
 Redacts in place the `X-Prime-Team-ID` header value, which v1 writes into config.toml and
-eval.log whether it comes from `--client.headers` or the PRIME_TEAM_ID environment variable.
+eval.log whether it comes from `--client.headers` or the PRIME_TEAM_ID environment variable, and
+replaces the inference base URL with <INFERENCE_URL>.
 Then fails (exit 1) if any output still contains the inference API key, a bearer token or the
 canary GUID (reference, alternate and cheat files carry it; a model reply can't legitimately).
 
@@ -17,6 +18,7 @@ from pathlib import Path
 
 from fin_model_edits.tasks import CANARY_GUID
 
+BASE_URL = re.compile(r"""(base_url["']?\s*[=:]\s*["'])(https?://[^"'\s]+)""")
 TEAM_HEADER = re.compile(r"""(X-Prime-Team-ID["']?\s*[=:]\s*["']?)([A-Za-z0-9_-]+)""")
 TOKEN_PATTERNS = [re.compile(r"(?i)bearer\s+[a-z0-9._-]{16,}"), re.compile(r"\bsk-[A-Za-z0-9]{16,}")]
 
@@ -31,6 +33,7 @@ def _api_key() -> str:
 def scrub_text(path: Path) -> bool:
     text = path.read_text(errors="replace")
     redacted = TEAM_HEADER.sub(r"\1<redacted>", text)
+    redacted = BASE_URL.sub(r"\1<INFERENCE_URL>", redacted)
     if redacted != text:
         path.write_text(redacted)
         return True
@@ -45,6 +48,8 @@ def leaks(path: Path, api_key: str) -> list[str]:
     found += [f"token /{p.pattern}/" for p in TOKEN_PATTERNS if p.search(text)]
     if TEAM_HEADER.search(text.replace("<redacted>", "")):
         found.append("team id")
+    if BASE_URL.search(text):
+        found.append("inference base URL")
     if CANARY_GUID in text:
         found.append("canary GUID")
     return found
