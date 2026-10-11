@@ -89,6 +89,13 @@ def test_newer_functions_get_the_xlfn_prefix():
     assert cells("CF!F6 = =SUM(F1:F2)") == [("CF", "F6", "=SUM(F1:F2)")], "unchanged when nothing to fix"
 
 
+def test_spaced_calls_count_as_calls():
+    assert function_names("=IS!F17*IF(RAND ()<0.97,1,0)") == ["IF", "RAND"]
+    assert function_names('=IF(A1="RAND(",1,0)') == ["IF"], "text in a string is not a call"
+    assert cells("CF!F6 = =ifna (IS!F17,0)") == [("CF", "F6", "=_xlfn.IFNA(IS!F17,0)")]
+    assert cells("CF!F6 = =SUM (F1:F2)") == [("CF", "F6", "=SUM(F1:F2)")]
+
+
 def test_function_names_strip_prefixes():
     assert function_names("=_xlfn.ORG.LIBREOFFICE.RAND.NV()*SUM(A1:A2)") == ["ORG.LIBREOFFICE.RAND.NV", "SUM"]
     assert function_names("=IF(A1>0,_xlfn.IFNA(B1,0),0)") == ["IF", "IFNA"]

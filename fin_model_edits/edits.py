@@ -44,7 +44,8 @@ ALLOWED_FUNCTIONS = frozenset(
     """
     SUM SUMPRODUCT PRODUCT AVERAGE AVERAGEIF MEDIAN MIN MAX LARGE SMALL COUNT COUNTA COUNTIF
     COUNTIFS SUMIF SUMIFS MAXIFS MINIFS
-    IF IFS IFERROR IFNA SWITCH AND OR NOT XOR TRUE FALSE NA ISNUMBER ISERROR ISBLANK N
+    IF IFS IFERROR IFNA SWITCH AND OR NOT XOR TRUE FALSE NA ISNUMBER ISERROR ISERR ISNA ISTEXT
+    ISBLANK N
     CHOOSE INDEX MATCH XMATCH VLOOKUP HLOOKUP LOOKUP XLOOKUP OFFSET ROW ROWS COLUMN COLUMNS
     ROUND ROUNDUP ROUNDDOWN INT TRUNC CEILING FLOOR ABS SIGN MOD POWER SQRT EXP LN LOG LOG10
     NPV IRR PV FV PMT
@@ -113,32 +114,60 @@ def _bare_name(token_value: str) -> str:
     return name
 
 
+def _calls(tokens: list[Token]) -> list[tuple[int, int, str]]:
+    """(first token index, last token index, bare name) of every function call. Besides FUNC
+    tokens, this covers a name followed by spaces and `(`: openpyxl's tokenizer reads `RAND ()`
+    as an operand, a space and a parenthesis, but LibreOffice calls RAND."""
+    out = []
+    for i, t in enumerate(tokens):
+        if t.type == Token.FUNC and t.subtype == Token.OPEN:
+            out.append((i, i, _bare_name(t.value)))
+        elif t.type == Token.OPERAND and t.subtype == Token.RANGE:
+            j = i + 1
+            while j < len(tokens) and tokens[j].type == Token.WSPACE:
+                j += 1
+            if j < len(tokens) and tokens[j].type == Token.PAREN and tokens[j].subtype == Token.OPEN:
+                out.append((i, j, _bare_name(t.value)))
+    return out
+
+
+_STRING = re.compile(r'"(?:[^"]|"")*"')
+_CALL = re.compile(r"([A-Za-z_][A-Za-z0-9_.]*)\s*\(")
+
+
 def function_names(formula: str) -> list[str] | None:
-    """Names of the functions a formula calls, without `_xlfn.`; None if it can't be tokenized."""
+    """Names of the functions a formula calls, without `_xlfn.`; None if it can't be tokenized.
+
+    Fails closed: any name followed by `(` outside a string literal counts as a call, whatever
+    the tokenizer made of it."""
     try:
         tokens = Tokenizer(formula).items
     except Exception:
         return None
-    return [_bare_name(t.value) for t in tokens if t.type == Token.FUNC and t.subtype == Token.OPEN]
+    names = [name for _, _, name in _calls(tokens)]
+    names += [_bare_name(m.group(1)) for m in _CALL.finditer(_STRING.sub('""', formula))]
+    return list(dict.fromkeys(names))
 
 
 def normalize_formula(formula: str) -> str:
-    """Upper-case allowed function names and add `_xlfn.` where LibreOffice needs it."""
+    """Upper-case allowed function names, drop spaces before their `(`, and add `_xlfn.` where
+    LibreOffice needs it."""
     try:
         tokens = Tokenizer(formula).items
     except Exception:
         return formula
-    parts, changed = [], False
-    for t in tokens:
-        value = t.value
-        if (
-            t.type == Token.FUNC
-            and t.subtype == Token.OPEN
-            and (name := _bare_name(value)) in ALLOWED_FUNCTIONS
-        ):
+    replace = {first: (last, name) for first, last, name in _calls(tokens) if name in ALLOWED_FUNCTIONS}
+    parts, changed, i = [], False, 0
+    while i < len(tokens):
+        if i in replace:
+            last, name = replace[i]
             value = ("_xlfn." if name in NEEDS_XLFN else "") + name + "("
-            changed |= value != t.value
-        parts.append(value)
+            changed |= value != "".join(t.value for t in tokens[i : last + 1])
+            parts.append(value)
+            i = last + 1
+            continue
+        parts.append(tokens[i].value)
+        i += 1
     return "=" + "".join(parts) if changed else formula
 
 
