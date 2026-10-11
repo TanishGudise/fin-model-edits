@@ -1,3 +1,0 @@
-# Cash points at beginning cash instead of ending cash, and the inventory change is flipped.
-BS!F5:J5 = =CF!F21
-CF!F9:J9 = =BS!F7-BS!E7

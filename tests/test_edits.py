@@ -2,7 +2,7 @@
 
 import pytest
 
-from fin_model_edits.edits import EditError, apply_edits, parse_edit_lines, parse_reply
+from fin_model_edits.edits import EditError, apply_edits, function_names, parse_edit_lines, parse_reply
 from fin_model_edits.workbook import SHEETS, build_base_workbook
 
 SHEET_NAMES = list(SHEETS)
@@ -75,3 +75,20 @@ def test_reply_blocks():
     assert parse_reply("IS!F5 = 1", SHEET_NAMES) is None, "edits outside a block are not an answer"
     assert parse_reply("```\nIS!F5 = 1\n```", SHEET_NAMES) is None, "the block must be tagged edits"
     assert parse_reply("```edits\n```", SHEET_NAMES) == [], "an empty block is a (no-op) answer"
+
+
+def test_crlf_indented_fences_and_quoted_sheets_parse():
+    reply = "Here:\r\n  ```edits\r\n'CF'!F6 = =IS!F17\r\n  ```\r\n"
+    edits = parse_reply(reply, SHEET_NAMES)
+    assert [(e.sheet, e.ref, e.content) for e in edits] == [("CF", "F6", "=IS!F17")]
+
+
+def test_newer_functions_get_the_xlfn_prefix():
+    assert cells("CF!F6 = =ifna(IS!F17,0)") == [("CF", "F6", "=_xlfn.IFNA(IS!F17,0)")]
+    assert cells("CF!F6 = =_xlfn.XLOOKUP(1,A1:A2,B1:B2)") == [("CF", "F6", "=_xlfn.XLOOKUP(1,A1:A2,B1:B2)")]
+    assert cells("CF!F6 = =SUM(F1:F2)") == [("CF", "F6", "=SUM(F1:F2)")], "unchanged when nothing to fix"
+
+
+def test_function_names_strip_prefixes():
+    assert function_names("=_xlfn.ORG.LIBREOFFICE.RAND.NV()*SUM(A1:A2)") == ["ORG.LIBREOFFICE.RAND.NV", "SUM"]
+    assert function_names("=IF(A1>0,_xlfn.IFNA(B1,0),0)") == ["IF", "IFNA"]
