@@ -17,6 +17,7 @@ logs.mkdir(parents=True, exist_ok=True)
 summary = {
     "score": result.score,
     "checks": result.checks,
+    "issues": result.issues,
     "rejected": result.rejected,
     "recalc_failed": result.recalc_failed,
     "cells_edited": result.cells_edited,

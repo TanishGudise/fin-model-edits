@@ -32,6 +32,14 @@ from fin_model_edits.grader import grade_sync
 from fin_model_edits.tasks import get_spec, load_specs
 
 OUTPUTS = Path(__file__).resolve().parent.parent / "outputs"
+
+# USD per million input / output tokens, for providers whose traces don't record a cost
+# (list prices, October 2026; Claude Haiku 5.5's rate applies to prompts up to 100K tokens).
+LIST_PRICES = {
+    "claude-haiku-5-5": (0.10, 0.50),
+    "claude-sonnet-5-5": (2.00, 10.00),
+    "claude-opus-5-5": (4.00, 20.00),
+}
 REASONS = (
     "format error",
     "rejected",
@@ -77,6 +85,16 @@ class Rollout:
         return "missing labels"
 
 
+def _cost(model: str, calls: list[dict]) -> float:
+    recorded = sum(float(c.get("usage", {}).get("cost") or 0) for c in calls)
+    if recorded or model not in LIST_PRICES:
+        return recorded
+    price_in, price_out = LIST_PRICES[model]
+    tokens_in = sum(int(c.get("usage", {}).get("prompt_tokens") or 0) for c in calls)
+    tokens_out = sum(int(c.get("usage", {}).get("completion_tokens") or 0) for c in calls)
+    return (tokens_in * price_in + tokens_out * price_out) / 1e6
+
+
 def last_reply(trace: dict) -> str:
     nodes = trace.get("nodes", [])
     replies = [n["message"]["content"] for n in nodes if n.get("message", {}).get("role") == "assistant"]
@@ -110,7 +128,7 @@ def load_runs(models: list[str] | None, min_rollouts: int, regrade: bool) -> dic
                 rejected=float(metrics.get("rejected", 0)) == 1.0,
                 truncated=any(c.get("finish_reason") == "length" for c in calls),
                 output_tokens=sum(int(c.get("usage", {}).get("completion_tokens") or 0) for c in calls),
-                cost=sum(float(c.get("usage", {}).get("cost") or 0) for c in calls),
+                cost=_cost(model, calls),
                 checks=t.get("info", {}).get("grading", {}).get("checks", {}),
                 issues=t.get("info", {}).get("grading", {}).get("issues", {}) or {},
             )
