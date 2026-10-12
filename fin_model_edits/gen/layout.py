@@ -686,7 +686,9 @@ def describe(model: Model, lay: Layout) -> str:
     )
     out.append(
         "- Expenses are positive numbers that get subtracted. On the cash flow statement, outflows are "
-        "negative. A line that follows a different convention says so in its label."
+        "negative, and the DCF's free cash flow lines carry the same cash signs (capital expenditures "
+        "and increases in working capital are negative; unlevered free cash flow adds the lines up). A "
+        "line that follows a different convention says so in its label."
     )
     if m.cases:
         sheet, coord = lay.scalars["case"]
