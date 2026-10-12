@@ -47,6 +47,7 @@ def project(inputs, actuals) -> dict[str, float]:
         le = a["ap"] + a["accrued"] + a["debt"] + a["apic"] + a["re"]
         out |= {f"IS!{col}14": opex, f"IS!{col}15": ebitda, f"IS!{col}18": ebit, f"IS!{col}22": ni}
         out |= {f"BS!{col}11": assets, f"BS!{col}21": le, f"BS!{col}23": assets - le}
+        out |= {f"BS!{col}15": a["ap"] + a["accrued"]}
 
     last = {name: values[2] for name, values in actuals.items()}
     rev_p, cash_p, ar_p, inv_p, ppe_p = last["rev"], last["cash"], last["ar"], last["inv"], last["ppe"]
@@ -73,9 +74,10 @@ def project(inputs, actuals) -> dict[str, float]:
         ni = ebit - interest - tax
         ar, inv, ap = rev * i_["C25"] / 365, cogs * i_["C26"] / 365, cogs * i_["C27"] / 365
         repay = min(i_[f"{col}28"], debt_p)
+        dividend = ni * i_.get("C29", 0)  # a payout ratio exists only once a task adds one
         nwc_change = (ar_p - ar) + (inv_p - inv) + (ap - ap_p)  # accrued expenses are flat
-        cash = cash_p + ni + dna + sbc + nwc_change - capex - repay
-        ppe, debt, apic, re = ppe_p + capex - dna, debt_p - repay, apic_p + sbc, re_p + ni
+        cash = cash_p + ni + dna + sbc + nwc_change - capex - repay - dividend
+        ppe, debt, apic, re = ppe_p + capex - dna, debt_p - repay, apic_p + sbc, re_p + ni - dividend
         assets = cash + ar + inv + ppe + gw
         le = ap + accrued + debt + apic + re
         ufcf = ebit * (1 - i_["C23"]) + dna - capex + nwc_change
@@ -92,8 +94,14 @@ def project(inputs, actuals) -> dict[str, float]:
             f"BS!{col}21": le,
             f"BS!{col}23": assets - le,
             f"CF!{col}22": cash,
+            f"CF!{col}14": -capex,
+            f"BS!{col}19": re,
+            f"DCF!{col}6": -ebit * i_["C23"],
+            f"DCF!{col}8": dna,
             f"DCF!{col}11": ufcf,
         }
+        if "C29" in i_:
+            out[f"CF!{col}16"] = -dividend
         rev_p, cash_p, ar_p, inv_p, ppe_p, ap_p, debt_p, apic_p, re_p = (
             rev,
             cash,
@@ -116,6 +124,7 @@ def project(inputs, actuals) -> dict[str, float]:
         "DCF!C20": ev,
         "DCF!C21": net_debt,
         "DCF!C22": ev - net_debt,
+        "DCF!C23": i_["C33"],
         "DCF!C24": (ev - net_debt) / i_["C33"],
     }
     return out
