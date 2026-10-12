@@ -154,8 +154,17 @@ def _split_of(stem: str) -> str:
     return ("train", "test_id", "test_ood")[h]
 
 
+_REAL = set(
+    """Alley Almere Alstead Alton Belfield Belton Calton Elmore Elton Fengate Fenton Fenwick Garfield
+    Garton Haldane Halley Halstead Halton Isley Kelley Kelton Lorton Margate Marley Marton Norgate Norton
+    Orton Pelton Quinton Selley Torridge Varley""".split()
+)
+"""Stems that are real brands, people or well-known places."""
+
 NAME_STEMS = {
-    split: [f"{a}{b}" for a in _FIRST for b in _SECOND if _split_of(f"{a}{b}") == split]
+    split: [
+        f"{a}{b}" for a in _FIRST for b in _SECOND if _split_of(f"{a}{b}") == split and f"{a}{b}" not in _REAL
+    ]
     for split in ("train", "test_id", "test_ood")
 }
 

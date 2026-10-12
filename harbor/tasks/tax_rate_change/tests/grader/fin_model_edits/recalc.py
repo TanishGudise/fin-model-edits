@@ -93,7 +93,9 @@ def _minimal_env(home: Path) -> dict[str, str]:
     }
 
 
-def _run_soffice(profile: Path, inputs: list[Path], outdir: Path, home: Path) -> tuple[bool, str, bool]:
+def _run_soffice(
+    profile: Path, inputs: list[Path], outdir: Path, home: Path, timeout: float = RECALC_TIMEOUT_S
+) -> tuple[bool, str, bool]:
     cmd = [
         soffice_path(),
         f"-env:UserInstallation={profile.as_uri()}",
@@ -117,7 +119,7 @@ def _run_soffice(profile: Path, inputs: list[Path], outdir: Path, home: Path) ->
         start_new_session=True,
     )
     try:
-        out, _ = proc.communicate(timeout=RECALC_TIMEOUT_S)
+        out, _ = proc.communicate(timeout=timeout)
         return proc.returncode == 0, out.decode(errors="replace")[-2000:], False
     except subprocess.TimeoutExpired:
         try:
@@ -158,7 +160,9 @@ def read_values(path: Path) -> Values:
     return out
 
 
-def recalc_sync(workbooks: list[Workbook]) -> RecalcResult:
+def recalc_sync(workbooks: list[Workbook], timeout: float | None = None) -> RecalcResult:
+    """Recalculate the workbooks in one LibreOffice run. The default timeout fits one grade
+    (a reply and its variants); pass a longer one for larger batches."""
     profile_template = _template_profile()
     with tempfile.TemporaryDirectory(prefix="fin-model-edits-") as tmp:
         root = Path(tmp)
@@ -173,7 +177,7 @@ def recalc_sync(workbooks: list[Workbook]) -> RecalcResult:
             wb.save(path)
             inputs.append(path)
         with _slots:
-            ok, output, timed_out = _run_soffice(profile, inputs, outdir, root)
+            ok, output, timed_out = _run_soffice(profile, inputs, outdir, root, timeout or RECALC_TIMEOUT_S)
         results = [outdir / p.name for p in inputs]
         if not ok or not all(p.exists() for p in results):
             return RecalcResult(None, error=output, timed_out=timed_out)

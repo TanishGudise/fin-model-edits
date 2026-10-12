@@ -56,6 +56,8 @@ class Planted:
     """Inputs a perturbation must move so a typed number can't pass."""
     freeze: set[CellKey] = field(default_factory=set)
     """Cells perturbations must not overwrite (they would hide the issue)."""
+    claim: dict | None = None
+    """What a fixed symptom says about the numbers, checked against the task workbook (generate.py)."""
 
 
 def _f(m: Model, key: str) -> list[str]:
@@ -302,7 +304,8 @@ def driver_bypass(m: Model, rng: random.Random, used: set[str]) -> Planted | Non
     )
 
 
-RANGE_LINES = ["opex", "tca", "tcl", "cfo", "cff", "d_nwc", "opex_q"]
+RANGE_LINES = ["opex", "tca", "tcl", "cff", "opex_q"]
+"""Totals whose last line moves (cfo and d_nwc end with accrued expenses, which are held flat)."""
 
 
 def range_error(m: Model, rng: random.Random, used: set[str]) -> Planted | None:
@@ -368,6 +371,14 @@ STALE = {  # input: (lines that read it, how to pick the new value)
     "dio": (("inv",), lambda v, r: v + r.choice((-10, -6, 6, 10))),
     "payout": (("cf_div",), lambda v, r: round(v + r.choice((-0.1, -0.05, 0.05, 0.1)), 2)),
 }
+STALE_RANGE = {  # a change request must land on a realistic value
+    "tax_rate": (0.15, 0.35),
+    "int_rate": (0.02, 0.12),
+    "dso": (15, 120),
+    "dpo": (15, 120),
+    "dio": (10, 150),
+    "payout": (0.1, 0.6),
+}
 
 
 def _fmt(v: float, fmt: str) -> str:
@@ -387,7 +398,8 @@ def stale_constant(m: Model, rng: random.Random, used: set[str]) -> Planted | No
     users = [u for u in users if u in m.lines]
     old = m.lines[x].cells[""]
     new = pick(old, rng)
-    if x == "dio" and new <= 0:
+    lo, hi = STALE_RANGE[x]
+    if not lo <= new <= hi or new == old:
         return None
     task = {}
     for u in users:
@@ -447,9 +459,10 @@ def unit_mismatch(m: Model, rng: random.Random, used: set[str]) -> Planted | Non
         "inputs looks like it was typed in the wrong units. Correct the input."
     )
     return Planted(
-        "unit_mismatch",
-        f"{m.lines[key].label} for {p} typed as {old * 100:g} instead of {old:g}",
-        {(key, p): round(old * 100, 6)},
+        kind="unit_mismatch",
+        name=f"{m.lines[key].label} for {p} typed as {old * 100:g} instead of {old:g}",
+        task_cells={(key, p): round(old * 100, 6)},
+        claim={"type": "far", "key": target, "periods": [p]},
         may_change=[(key, p)],
         lines={key, target},
         symptom=symptom,
@@ -610,8 +623,8 @@ def decoy_capex(m: Model, rng: random.Random, used: set[str]) -> Decoy | None:
     asset = rng.choice(
         ("distribution centre", "headquarters fit-out", "fleet renewal", "new production line")
     )
-    unit = "$000" if m.units.endswith("thousands") else "$m"
-    m.lines["cf_capex"].note = f"{p} includes the approved {asset}, {amount:g} {unit} on top of the run-rate"
+    money = f"${amount:,.0f} thousand" if m.units.endswith("thousands") else f"${amount:g}m"
+    m.lines["cf_capex"].note = f"{p} includes the approved {asset}, {money} on top of the run-rate"
     return Decoy("one_off_capex", [("cf_capex", p)], {"cf_capex", "capex_pct"})
 
 
