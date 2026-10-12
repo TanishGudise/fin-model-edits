@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from openpyxl import Workbook
 from openpyxl.utils import column_index_from_string, get_column_letter
 
+from fin_model_edits.edits import MAX_ROW
 from fin_model_edits.gen.expr import Across, Bin, Expr, Fn, In, Neg, Num, QSum, Ref, Sum, YRef
 from fin_model_edits.gen.model import Model
 from fin_model_edits.workbook import FIXED_TIME
@@ -54,46 +55,53 @@ IS_GROUPS = [
     ["seg1", "seg2", "seg3", "revenue", "rev_growth"],
     ["cogs", "gp", "gm_pct"],
     ["opex1", "opex2", "opex3", "opex4", "opex5", "sbc", "memo_oneoff", "opex"],
-    ["ebitda", "ebitda_pct", "dna", "ebit"],
-    ["interest", "ebt", "tax", "ni"],
+    ["ebitda", "ebitda_pct", "dna", "lease_amort", "ebit"],
+    ["interest", "lease_int", "ebt", "tax", "ni", "ni_nci", "ni_parent"],
+    ["#Tax losses carried forward", "nol_beg", "nol_use", "nol_end"],
 ]
 BS_GROUPS = [
-    ["#Assets", "cash", "ar", "inv", "tca", "ppe", "gw", "ta"],
-    ["#Liabilities and equity", "ap", "accrued", "tcl", "debt", "tl", "apic", "re", "te", "tle"],
+    ["#Assets", "cash", "ar", "inv", "tca", "ppe", "gw", "rou", "ta"],
+    ["#Liabilities and equity", "ap", "accrued", "def_rev", "tcl", "tla", "notes", "revolver", "debt"]
+    + ["lease_liab", "tl", "apic", "re", "nci", "te", "tle"],
     ["check"],
 ]
 CF_GROUPS = [
-    ["cf_ni", "cf_dna", "cf_sbc", "cf_ar", "cf_inv", "cf_ap", "cf_accr", "cfo"],
+    [
+        "cf_ni",
+        "cf_dna",
+        "cf_lease_amort",
+        "cf_sbc",
+        "cf_ar",
+        "cf_inv",
+        "cf_ap",
+        "cf_accr",
+        "cf_defrev",
+        "cfo",
+    ],
     ["cf_capex", "cfi"],
-    ["cf_repay", "cf_div", "cff"],
+    ["cf_repay", "cf_lease", "cf_div", "cf_revolver", "cff"],
     ["cf_net", "cf_beg", "cf_end"],
+    ["cf_pre"],
 ]
 DCF_GROUPS = [
-    ["d_ebit", "d_tax", "d_nopat", "d_dna", "d_capex", "d_nwc", "d_ufcf"],
+    ["d_ebit", "d_tax", "d_nopat", "d_dna", "d_lease_amort", "d_capex", "d_lease_new", "d_nwc", "d_ufcf"],
     ["d_period", "d_df", "d_pv"],
 ]
-VAL_GROUP = ["v_sumpv", "v_tv", "v_pvtv", "v_ev", "v_netdebt", "v_eq", "v_shares", "v_ps", "v_tvpct"]
+VAL_GROUP = ["v_sumpv", "v_tv", "v_pvtv", "v_ev", "v_netdebt", "v_nci", "v_eq", "v_shares", "v_ps", "v_tvpct"]
 QTR_GROUPS = [
     ["rev_q", "cogs_q", "gp_q"],
     ["opex1_q", "opex2_q", "opex3_q", "opex4_q", "opex5_q", "opex_q", "ebitda_q"],
 ]
-SERIES_ORDER = [
-    "seg_g1",
-    "seg_g2",
-    "seg_g3",
-    "growth",
-    "gm",
-    "opex1_pct",
-    "opex2_pct",
-    "opex3_pct",
-    "opex4_pct",
-    "opex5_pct",
+SERIES_ORDER = ["seg_g1", "seg_g2", "seg_g3", "growth", "gm"]
+SERIES_ORDER += [f"opex{i}_pct" for i in range(1, 6)] + [
     "sbc_pct",
     "dna_pct",
     "capex_pct",
     "repay",
+    "lease_new",
 ]
-SCALAR_ORDER = ["tax_rate", "int_rate", "dso", "dio", "dpo", "payout"]
+SCALAR_ORDER = ["tax_rate", "nol_cap", "int_rate", "tla_rate", "notes_rate", "rev_rate", "min_cash"]
+SCALAR_ORDER += ["lease_rate", "lease_life", "dso", "dio", "dpo", "dr_pct", "payout", "nci_pct"]
 VAL_INPUTS = ["wacc", "tg", "shares"]
 # Layout C: which line each driver row sits under, and which sheet holds each scalar input.
 INLINE_UNDER = {
@@ -103,13 +111,14 @@ INLINE_UNDER = {
     "dna_pct": "dna",
     "capex_pct": "cf_capex",
     "repay": "cf_repay",
+    "lease_new": "rou",
     **{f"seg_g{j}": f"seg{j}" for j in (1, 2, 3)},
     **{f"opex{i}_pct": f"opex{i}" for i in range(1, 6)},
 }
 INLINE_SCALARS = {
-    "is": ["tax_rate", "int_rate"],
-    "bs": ["dso", "dio", "dpo"],
-    "cf": ["payout"],
+    "is": ["tax_rate", "nol_cap", "int_rate", "tla_rate", "notes_rate", "rev_rate", "lease_rate", "nci_pct"],
+    "bs": ["dso", "dio", "dpo", "dr_pct", "lease_life"],
+    "cf": ["payout", "min_cash"],
     "dcf": ["wacc", "tg", "shares"],
 }
 UNITS = {"pct": "%", "days": "days", "int": "#", "x": "x", "years": "years", "pershare": "$"}
@@ -295,7 +304,7 @@ def _dcf(s: _Sheet, m: Model, title: str, value_col: str, inline_scalars: bool =
     s.blank()
     s.groups(DCF_GROUPS)
     s.blank()
-    for k in VAL_GROUP:
+    for k in _present(m, VAL_GROUP):
         s.scalar(k, value_col)
     s.blank()
     s.scalar("v_policy", s.label_col)
@@ -387,7 +396,7 @@ def place(model: Model, family: str, rng: random.Random) -> Layout:
         s.header(m.forecast)
         s.groups(DCF_GROUPS)
         s.blank()
-        for k in VAL_GROUP:
+        for k in _present(m, VAL_GROUP):
             s.scalar(k, "C")
         s.blank()
         s.scalar("v_policy", "A")
@@ -455,11 +464,11 @@ def place(model: Model, family: str, rng: random.Random) -> Layout:
     for sheet, coord in list(lay.text):
         col = "".join(ch for ch in coord if ch.isalpha())
         row = int("".join(ch for ch in coord if ch.isdigit()))
-        if column_index_from_string(col) > 26 or row > 200:
-            raise ValueError(f"layout {family} puts text outside A1:Z200: {sheet}!{coord}")
+        if column_index_from_string(col) > 26 or row > MAX_ROW:
+            raise ValueError(f"layout {family} puts text outside A1:Z{MAX_ROW}: {sheet}!{coord}")
     for sheet, row in lay.rows.values():
-        if row > 200:
-            raise ValueError(f"layout {family} needs more than 200 rows on {sheet}")
+        if row > MAX_ROW:
+            raise ValueError(f"layout {family} needs more than {MAX_ROW} rows on {sheet}")
     return lay
 
 
@@ -653,6 +662,12 @@ def describe(model: Model, lay: Layout) -> str:
             f"`{n['cf']}` (cash flow statement, forecast years only) and `{n['dcf']}` (unlevered DCF)."
         )
         qc = list(lay.qcols.values())
+        q_years = sorted({m.quarter_year[q] for q in m.quarters[4:]}, key=m.periods.index)
+        if len(q_years) < len(m.forecast):
+            out.append(
+                f"- The quarterly build covers {pspan(q_years)}; later forecast years are built annually "
+                "from the annual assumptions."
+            )
         out.append(
             f"- On `{n['qtr']}`, columns {span(qc[:4])} are the quarters of {m.actual[-1]} (actuals) and "
             f"columns {span(qc[4:])} the forecast quarters, four per year."
@@ -693,6 +708,40 @@ def describe(model: Model, lay: Layout) -> str:
     if m.cases:
         sheet, coord = lay.scalars["case"]
         out.append(f"- `{sheet}` {coord} selects the active case ({m.lines['case'].note}).")
+    out.extend(f"- {text}" for key, text in SCHEDULE_RULES if key in m.modules)
     sheet, row = lay.rows["check"]
     out.append(f"- `{sheet}` row {row} is the balance check. It should be 0 in every year.")
     return "\n".join(out)
+
+
+SCHEDULE_RULES = [
+    (
+        "debt_schedule",
+        "Debt: the term loan amortizes on its schedule, the senior notes are repaid at maturity (after the "
+        "forecast), and the revolver draws to keep cash at the minimum cash balance and repays from surplus "
+        "cash, never going below zero. Interest is charged on beginning-of-year balances.",
+    ),
+    (
+        "leases",
+        "Leases: right-of-use assets amortize straight-line over the lease life, lease liabilities are "
+        "repaid in equal principal over the lease life (a financing cash flow), and lease interest is "
+        "charged on the "
+        "opening liability.",
+    ),
+    (
+        "deferred_revenue",
+        "Deferred revenue is a percentage of revenue; an increase is a working capital inflow.",
+    ),
+    (
+        "nol",
+        "Tax losses carried forward offset taxable income up to the usage limit; tax is charged on what is "
+        "left, and the closing balance carries into the next year.",
+    ),
+    (
+        "minority",
+        "Net income includes the non-controlling interests' share. Retained earnings and dividends use the "
+        "net income attributable to the company; the non-controlling interests' balance grows with their "
+        "share.",
+    ),
+]
+"""How each schedule of the larger workbooks works, stated in the prompt so it can be checked."""

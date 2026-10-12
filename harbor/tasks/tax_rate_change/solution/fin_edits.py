@@ -29,7 +29,7 @@ from openpyxl.formula.translate import Translator
 from openpyxl.utils.cell import coordinate_from_string, get_column_letter, range_boundaries
 from openpyxl.workbook.workbook import Workbook
 
-MAX_ROW = 200
+MAX_ROW = 300
 MAX_COL = 26  # A..Z
 MAX_CELLS = 5000
 MAX_CONTENT_CHARS = 1000

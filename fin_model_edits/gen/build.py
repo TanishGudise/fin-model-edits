@@ -193,8 +193,14 @@ SIZES = {
     "S": {"n_forecast": (3, 4), "opex": (2, 3), "modules": (0, 1)},
     "M": {"n_forecast": (5, 5), "opex": (3, 3), "modules": (1, 2)},
     "L": {"n_forecast": (6, 7), "opex": (4, 5), "modules": (3, 4)},
+    "XL": {"n_forecast": (8, 10), "opex": (5, 5), "modules": (3, 4)},
+    "XXL": {"n_forecast": (10, 10), "opex": (5, 5), "modules": (4, 4)},
 }
 OPTIONAL = ("scenario", "segments", "sbc", "dividends")
+SCHEDULES = ("debt_schedule", "leases", "deferred_revenue", "nol", "minority")
+"""Modules of the XL and XXL workbooks (extend.py)."""
+QUARTER_YEARS = 5
+"""Forecast years with a quarterly build (layout E); later years are annual (columns end at Z)."""
 
 
 def sample_profile(rng: random.Random, split: str, size: str, layout: str) -> Profile:
@@ -206,7 +212,7 @@ def sample_profile(rng: random.Random, split: str, size: str, layout: str) -> Pr
     units, scale = ("$ in thousands", 1000.0) if thousands else ("$ in millions", 1.0)
     sz = SIZES[size]
     n_forecast = rng.randint(*sz["n_forecast"])
-    if layout == "E":
+    if layout == "E" and size not in ("XL", "XXL"):
         n_forecast = min(n_forecast, 5)  # quarterly columns must fit in A..Z
     n_actual = rng.choice((2, 3))
     first_actual_year = rng.randint(2021, 2024) - n_actual + 1
@@ -227,6 +233,12 @@ def sample_profile(rng: random.Random, split: str, size: str, layout: str) -> Pr
     if "scenario" in modules:
         cases = ["Base", "Upside"] + (["Downside"] if rng.random() < 0.5 else [])
     segments = rng.sample(spec["segments"], rng.choice((2, 3))) if "segments" in modules else []
+    if size == "XL":
+        modules |= {"debt_schedule", "leases"} | set(rng.sample(SCHEDULES[2:], rng.randint(1, 2)))
+    elif size == "XXL":
+        modules |= set(SCHEDULES)
+    if size in ("XL", "XXL") and cases:
+        cases = ["Base", "Upside", "Downside"]
     return Profile(
         split=split,
         company=company,
@@ -1082,6 +1094,10 @@ def build_model(p: Profile, rng: random.Random) -> Model:
             f"taken at the valuation date."
         )
     m.add(Line("v_policy", "", "val", kind="scalar", text=policy))
+    if set(SCHEDULES) & m.modules or len(m.forecast) > QUARTER_YEARS and "quarterly" in m.modules:
+        from fin_model_edits.gen.extend import extend
+
+        extend(m, p, rng)
     # Shares outstanding: whatever puts the share price in a realistic range.
     from fin_model_edits.gen.model import Evaluator
 

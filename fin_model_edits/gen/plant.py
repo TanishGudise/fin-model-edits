@@ -128,6 +128,10 @@ PASTE_LINES = [
     "interest",
     "tax",
     "cf_capex",
+    "lease_amort",
+    "lease_int",
+    "def_rev",
+    "ni_nci",
 ]
 
 
@@ -166,6 +170,12 @@ WRONG_ROW = [
     ("d_ebit", "ebit", "ebitda"),
     ("cf_beg", "cash", "tca"),
     ("dna", "revenue", "gp"),
+    ("lease_amort", "rou", "ppe"),
+    ("lease_int", "lease_liab", "debt"),
+    ("ni_nci", "ni", "ebt"),
+    ("def_rev", "revenue", "cogs"),
+    ("cf_lease_amort", "lease_amort", "dna"),
+    ("interest", "tla", "notes"),
 ]
 
 
@@ -199,6 +209,10 @@ WRONG_PERIOD = [
     ("d_ebit", "ebit", 0, -1),
     ("cf_ni", "ni", 0, -1),
     ("dna", "revenue", 0, -1),
+    ("lease_int", "lease_liab", -1, 0),
+    ("ni_nci", "ni", 0, -1),
+    ("def_rev", "revenue", 0, -1),
+    ("interest", "tla", -1, 0),
 ]
 
 
@@ -337,14 +351,20 @@ def range_error(m: Model, rng: random.Random, used: set[str]) -> Planted | None:
 
 def sign_flip(m: Model, rng: random.Random, used: set[str]) -> Planted | None:
     opts = []
+    loan = "tla" if "tla" in m.lines else "debt"
+    income = "ni_parent" if "ni_parent" in m.lines else "ni"
     for k, flipped in (
         ("cf_ar", lambda: Ref("ar") - Ref("ar", -1)),
         ("cf_inv", lambda: Ref("inv") - Ref("inv", -1)),
         ("cf_ap", lambda: Ref("ap", -1) - Ref("ap")),
         ("ppe", lambda: Ref("ppe", -1) + Ref("cf_capex") - Ref("dna")),
-        ("cf_repay", lambda: Fn("MIN", Ref("repay"), Ref("debt", -1))),
-        ("cf_div", lambda: Ref("ni") * In("payout")),
+        ("cf_repay", lambda: Fn("MIN", Ref("repay"), Ref(loan, -1))),
+        ("cf_div", lambda: Ref(income) * In("payout")),
         ("d_capex", lambda: -Ref("cf_capex")),
+        ("cf_defrev", lambda: Ref("def_rev", -1) - Ref("def_rev")),
+        ("cf_lease", lambda: Ref("lease_liab", -1) / In("lease_life")),
+        ("revolver", lambda: Ref("revolver", -1) - Ref("cf_revolver")),
+        ("d_lease_new", lambda: Ref("lease_new")),
     ):
         if _free(m, used, k):
             opts.append((k, flipped))
@@ -472,14 +492,24 @@ def unit_mismatch(m: Model, rng: random.Random, used: set[str]) -> Planted | Non
 
 def broken_rollforward(m: Model, rng: random.Random, used: set[str]) -> Planted | None:
     opts = []
+    income = "ni_parent" if "ni_parent" in m.lines else "ni"
     if _free(m, used, "re") and "cf_div" in m.lines:
-        opts.append(("re", lambda: Ref("re", -1) + Ref("ni"), "dividends"))
+        opts.append(("re", lambda: Ref("re", -1) + Ref(income), "dividends"))
     if _free(m, used, "apic") and "sbc" in m.lines:
         opts.append(("apic", lambda: Ref("apic", -1), "stock-based compensation"))
     if _free(m, used, "ppe"):
         opts.append(("ppe", lambda: Ref("ppe", -1) - Ref("cf_capex"), "depreciation"))
-    if _free(m, used, "debt"):
+    if _free(m, used, "debt") and "tla" not in m.lines:
         opts.append(("debt", lambda: Ref("debt", -1), "repayments"))
+    for key, expr, what in (
+        ("tla", lambda: Ref("tla", -1), "its amortization"),
+        ("rou", lambda: Ref("rou", -1) + Ref("lease_new"), "amortization"),
+        ("lease_liab", lambda: Ref("lease_liab", -1) + Ref("lease_new"), "principal repayments"),
+        ("nol_end", lambda: Ref("nol_beg"), "the tax losses used"),
+        ("nci", lambda: Ref("nci", -1), "its share of net income"),
+    ):
+        if _free(m, used, key):
+            opts.append((key, expr, what))
     if not opts:
         return None
     key, expr, what = rng.choice(opts)
@@ -498,10 +528,19 @@ def valuation_policy(m: Model, rng: random.Random, used: set[str]) -> Planted | 
     if _free(m, used, "v_tv"):
         e = m.lines["v_tv"].cells[""]
         opts.append(("v_tv", {("v_tv", ""): _swap_at(e, "d_ufcf", F[-1], F[-2])}, [], "the terminal value"))
+    leases = "lease_liab" in m.lines
     if _free(m, used, "v_netdebt"):
-        opts.append(
-            ("v_netdebt", {("v_netdebt", ""): Ref("debt", at=F[0]) - Ref("cash", at=F[0])}, [], "net debt")
-        )
+        wrong_date = Ref("debt", at=F[0]) - Ref("cash", at=F[0])
+        if leases:
+            wrong_date = Ref("debt", at=F[0]) + Ref("lease_liab", at=F[0]) - Ref("cash", at=F[0])
+        opts.append(("v_netdebt", {("v_netdebt", ""): wrong_date}, [], "net debt"))
+        if leases:
+            A = m.actual
+            no_leases = Ref("debt", at=A[-1]) - Ref("cash", at=A[-1])
+            opts.append(("v_netdebt", {("v_netdebt", ""): no_leases}, [], "net debt"))
+    if _free(m, used, "v_eq") and "v_nci" in m.lines:
+        no_nci = Ref("v_ev", at="") - Ref("v_netdebt", at="")
+        opts.append(("v_eq", {("v_eq", ""): no_nci}, [], "the equity value"))
     if _free(m, used, "v_pvtv"):
         e = m.lines["v_pvtv"].cells[""]
         if m.discounting == "mid":
@@ -547,7 +586,37 @@ BUGS: dict[str, Callable] = {
     "broken_rollforward": broken_rollforward,
     "valuation_policy": valuation_policy,
 }
-LATENT_KINDS = ("pasted_value", "driver_bypass")
+
+
+def case_mapping(m: Model, rng: random.Random, used: set[str]) -> Planted | None:
+    """An active-case row whose CHOOSE lists the Upside and Downside cases the wrong way round: right
+    in the Base case, wrong when the switch moves (latent)."""
+    if len(m.cases) < 3:
+        return None
+    cands = [
+        k
+        for k in ("growth", "gm", "uplift")
+        if k in m.lines and m.lines[k].block == "cases" and _free(m, used, k)
+    ]
+    if not cands:
+        return None
+    key = rng.choice(cands)
+    cells = {}
+    for p in _f(m, key):
+        e = m.lines[key].cells[p]
+        cells[(key, p)] = Fn("CHOOSE", e.args[0], e.args[1], e.args[3], e.args[2])
+    return Planted(
+        "case_mapping",
+        f"{m.lines[key].label} picks the Downside row for Upside and the reverse",
+        cells,
+        lines={key},
+        latent=True,
+        shock={"case"},
+    )
+
+
+BUGS["case_mapping"] = case_mapping
+LATENT_KINDS = ("pasted_value", "driver_bypass", "case_mapping")
 VISIBLE_KINDS = tuple(k for k in BUGS if k not in LATENT_KINDS)
 
 
@@ -635,7 +704,15 @@ def decoy_flat(m: Model, rng: random.Random, used: set[str]) -> Decoy | None:
     return Decoy("flat_by_policy", [("accrued", p) for p in m.forecast], {"accrued", "cf_accr"})
 
 
+def decoy_bullet(m: Model, rng: random.Random, used: set[str]) -> Decoy | None:
+    if not _free(m, used, "notes"):
+        return None
+    m.lines["notes"].note = f"a bullet repaid at maturity after {m.forecast[-1]}; no amortization before then"
+    return Decoy("bullet_notes", [("notes", p) for p in m.forecast], {"notes"})
+
+
 DECOYS: dict[str, Callable] = {
+    "bullet_notes": decoy_bullet,
     "override": decoy_override,
     "sign_convention": decoy_sign,
     "memo_row": decoy_memo,

@@ -55,7 +55,7 @@ def test_comments_and_blank_lines_are_ignored():
         "IS F5 = 1",  # no sheet separator
         "Notes!A1 = x",  # unknown sheet
         "IS!AA5 = 1",  # outside A:Z
-        "IS!F201 = 1",  # outside the row limit
+        "IS!F301 = 1",  # outside the row limit
         "IS!J5:F5 = 1",  # reversed range
         "IS!F5 = " + "x" * 1001,  # too long
         "IS!A1:Z200 = 1\nBS!A1:Z200 = 1",  # too many cells
