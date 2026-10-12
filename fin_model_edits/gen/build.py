@@ -312,9 +312,11 @@ def build_model(p: Profile, rng: random.Random) -> Model:
     ar = [_r(r * dso * rng.uniform(0.93, 1.07) / 365, nd) for r in rev]
     inv = [_r(c * dio * rng.uniform(0.93, 1.07) / 365, nd) for c in cogs] if dio else []
     ap = [_r(c * dpo * rng.uniform(0.93, 1.07) / 365, nd) for c in cogs]
-    ppe = [_r(rev0 * rng.uniform(0.25, 0.5) * (1 + 0.02 * i), nd) for i in range(p.n_actual)]
+    ppe0, ppe_g = rev0 * rng.uniform(0.25, 0.5), rng.uniform(0.01, 0.04)
+    ppe = [_r(ppe0 * (1 + ppe_g) ** i, nd) for i in range(p.n_actual)]
     gw = [_r(rev0 * rng.uniform(0.1, 0.3), nd)] * p.n_actual
-    accrued = [_r(r * rng.uniform(0.03, 0.05), nd) for r in rev]
+    accrued_pct = rng.uniform(0.03, 0.05)
+    accrued = [_r(r * accrued_pct * rng.uniform(0.98, 1.02), nd) for r in rev]
     accrued = [accrued[0]] * p.n_actual if rng.random() < 0.5 else accrued
     apic = [_r(rev0 * rng.uniform(0.15, 0.3), nd)]
     for i in range(1, p.n_actual):
@@ -432,7 +434,8 @@ def build_model(p: Profile, rng: random.Random) -> Model:
         )
     if p.segments:
         for j, name in enumerate(p.segments, start=1):
-            gseg = [round(max(0.0, g + rng.uniform(-0.03, 0.03)), 3) for g in growth]
+            offset = rng.uniform(-0.02, 0.02)
+            gseg = [round(max(0.005, g + offset + rng.uniform(-0.004, 0.004)), 3) for g in growth]
             m.add(
                 Line(
                     f"seg_g{j}",
