@@ -8,3 +8,6 @@ build/
 dist/
 .env
 .env.*
+
+# Generated task sets (scripts/generate.py); reproducible from their seeds
+generated/
