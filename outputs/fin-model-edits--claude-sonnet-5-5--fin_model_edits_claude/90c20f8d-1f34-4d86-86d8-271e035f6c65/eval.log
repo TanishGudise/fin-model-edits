@@ -1,0 +1,89 @@
+01:36:06 WARNING Harness 'fin_model_edits_claude' is running in the subprocess runtime on the local system. Local files and settings may affect the evaluation; use subprocess only for debugging. Use --harness.runtime.type docker or prime for an isolated run.
+01:36:06    INFO eval config:
+{
+  "taskset": {
+    "id": "fin-model-edits",
+    "task": {
+      "judges": []
+    },
+    "task_ids": [
+      "dcf_policy_review"
+    ]
+  },
+  "harness": {
+    "id": "fin_model_edits_claude",
+    "runtime": {
+      "type": "subprocess"
+    },
+    "env": {},
+    "forward_env": [],
+    "disabled_tools": null
+  },
+  "timeout": {
+    "setup": null,
+    "rollout": null,
+    "finalize": null,
+    "scoring": null
+  },
+  "retries": {
+    "rollout": {
+      "max_retries": 0,
+      "include": [],
+      "exclude": []
+    }
+  },
+  "max_turns": null,
+  "max_input_tokens": null,
+  "max_output_tokens": 16384,
+  "max_total_tokens": null,
+  "interception": {
+    "type": "elastic",
+    "multiplex": 32
+  },
+  "id": null,
+  "args": {},
+  "extra_env_kwargs": {},
+  "pool": {
+    "type": "elastic",
+    "max_workers": null,
+    "multiplex": 128
+  },
+  "model": "claude-sonnet-5-5",
+  "client": {
+    "base_url": "<INFERENCE_URL>",
+    "api_key_var": "ANTHROPIC_API_KEY",
+    "headers": {},
+    "type": "eval"
+  },
+  "sampling": {
+    "temperature": null,
+    "top_p": null,
+    "reasoning_effort": null,
+    "max_tokens": null
+  },
+  "num_tasks": null,
+  "num_rollouts": 5,
+  "shuffle": false,
+  "max_concurrent": 128,
+  "verbose": false,
+  "dry_run": false,
+  "rich": true,
+  "server": false,
+  "push": false,
+  "output_dir": null
+}
+01:36:06    INFO running 1x5 rollouts on claude-sonnet-5-5
+01:36:06    INFO results: outputs/fin-model-edits--claude-sonnet-5-5--fin_model_edits_claude/90c20f8d-1f34-4d86-86d8-271e035f6c65
+01:36:06    INFO rollout start: id=5d8618aedbe646aaa8a58c4025dbfaea task=0 harness=fin_model_edits_claude runtime=subprocess
+01:36:06    INFO rollout start: id=c1920ae2e0cf42659d5bf1ab00af7663 task=0 harness=fin_model_edits_claude runtime=subprocess
+01:36:06    INFO rollout start: id=ae6611df83984ea3a31447dc9043d382 task=0 harness=fin_model_edits_claude runtime=subprocess
+01:36:06    INFO rollout start: id=f2042be2f3c040deb6878de925e383c4 task=0 harness=fin_model_edits_claude runtime=subprocess
+01:36:06    INFO rollout start: id=c19c93aac2cf437dbe75674b490fcff9 task=0 harness=fin_model_edits_claude runtime=subprocess
+01:36:06    INFO interception up: url=http://127.0.0.1:57484
+01:36:06    INFO interception pool: 1 server(s), multiplex=32
+01:36:16    INFO rollout done: id=c19c93aac2cf437dbe75674b490fcff9 task=0 reward=1.000 turns=1 stop=agent_completed
+01:36:16    INFO rollout done: id=f2042be2f3c040deb6878de925e383c4 task=0 reward=1.000 turns=1 stop=agent_completed
+01:36:16    INFO rollout done: id=ae6611df83984ea3a31447dc9043d382 task=0 reward=1.000 turns=1 stop=agent_completed
+01:36:16    INFO rollout done: id=5d8618aedbe646aaa8a58c4025dbfaea task=0 reward=1.000 turns=1 stop=agent_completed
+01:36:16    INFO rollout done: id=c1920ae2e0cf42659d5bf1ab00af7663 task=0 reward=1.000 turns=1 stop=agent_completed
+01:36:16    INFO interception down: url=http://127.0.0.1:57484
