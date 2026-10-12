@@ -20,14 +20,26 @@ from fin_model_edits.tasks import CANARY_GUID
 
 BASE_URL = re.compile(r"""(base_url["']?\s*[=:]\s*["'])(https?://[^"'\s]+)""")
 TEAM_HEADER = re.compile(r"""(X-Prime-Team-ID["']?\s*[=:]\s*["']?)([A-Za-z0-9_-]+)""")
-TOKEN_PATTERNS = [re.compile(r"(?i)bearer\s+[a-z0-9._-]{16,}"), re.compile(r"\bsk-[A-Za-z0-9]{16,}")]
+TOKEN_PATTERNS = [
+    re.compile(r"(?i)bearer\s+[a-z0-9._-]{16,}"),
+    re.compile(r"\bsk-[A-Za-z0-9]{16,}"),
+    re.compile(r"\bsk-ant-[A-Za-z0-9_-]{16,}"),
+]
 
 
-def _api_key() -> str:
+def _api_keys() -> list[str]:
+    """Keys that must never appear in outputs: the inference CLI's key and every *_KEY in .env."""
+    keys = []
     config = Path.home() / ".prime" / "config.json"
-    if not config.exists():
-        return ""
-    return json.loads(config.read_text()).get("api_key", "") or ""
+    if config.exists():
+        keys.append(json.loads(config.read_text()).get("api_key", "") or "")
+    env = Path(__file__).resolve().parent.parent / ".env"
+    if env.exists():
+        for line in env.read_text().splitlines():
+            name, _, value = line.partition("=")
+            if name.strip().endswith("_KEY") and value.strip():
+                keys.append(value.strip().strip("'\""))
+    return [k for k in keys if len(k) >= 16]
 
 
 def scrub_text(path: Path) -> bool:
@@ -40,10 +52,10 @@ def scrub_text(path: Path) -> bool:
     return False
 
 
-def leaks(path: Path, api_key: str) -> list[str]:
+def leaks(path: Path, api_keys: list[str]) -> list[str]:
     text = path.read_text(errors="replace")
     found = []
-    if api_key and api_key in text:
+    if any(key in text for key in api_keys):
         found.append("API key")
     found += [f"token /{p.pattern}/" for p in TOKEN_PATTERNS if p.search(text)]
     if TEAM_HEADER.search(text.replace("<redacted>", "")):
@@ -57,12 +69,12 @@ def leaks(path: Path, api_key: str) -> list[str]:
 
 def main() -> int:
     root = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("outputs")
-    api_key = _api_key()
+    api_keys = _api_keys()
     problems = []
     for path in sorted(p for p in root.rglob("*") if p.is_file()):
         if path.suffix != ".jsonl" and scrub_text(path):
             print(f"redacted: {path}")
-        problems += [f"{path}: {leak}" for leak in leaks(path, api_key)]
+        problems += [f"{path}: {leak}" for leak in leaks(path, api_keys)]
     if problems:
         print("LEAKS FOUND:\n  " + "\n  ".join(problems))
         return 1
