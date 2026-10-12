@@ -109,6 +109,8 @@ def load_runs(models: list[str] | None, min_per_task: int, regrade: bool) -> dic
     runs_by_model: dict[str, list[tuple[tuple[float, str], list[dict]]]] = {}
     for traces in OUTPUTS.glob("fin-model-edits--*/*/traces.jsonl"):
         rows = [json.loads(line) for line in traces.read_text().splitlines()]
+        # Runs on a generated task set (scripts/generate.py) aren't part of these tables.
+        rows = [t for t in rows if not t["task"]["data"].get("task_set")]
         if not rows:
             continue
         per_task = Counter(t["task"]["data"]["task_id"] for t in rows)
