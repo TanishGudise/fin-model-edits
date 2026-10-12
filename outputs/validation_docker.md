@@ -1,5 +1,8 @@
 # Validation
 
+Run in the Docker image built from the repo's Dockerfile, with no network:
+`docker run --rm --network none -v "$PWD/outputs:/out" fin-model-edits:dev sh -c 'uv run --offline python scripts/validate.py --runs 3 --jobs 4 --out /out/validation_docker.md'`
+
 LibreOffice 25.2.3.2 520(Build:2). Each check ran **3** times, 4 graders in parallel on 8 cores: 240 grades in 63s. Every grade recalculates the reply's workbook and its perturbed variants in a fresh LibreOffice process. "Deterministic" means all runs gave the same score, the same failed checks and the same hash of every recalculated value.
 
 **Result: PASS**
