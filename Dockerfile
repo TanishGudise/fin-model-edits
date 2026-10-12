@@ -12,6 +12,7 @@ ENV UV_PYTHON_DOWNLOADS=never UV_LINK_MODE=copy
 WORKDIR /app
 COPY pyproject.toml uv.lock LICENSE ./
 COPY fin_model_edits ./fin_model_edits
+COPY fin_model_edits_claude ./fin_model_edits_claude
 COPY scripts ./scripts
 COPY tests ./tests
 RUN uv sync --frozen

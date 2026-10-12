@@ -191,7 +191,7 @@ def main() -> None:
         mean = f"{sum(means) / len(means):.2f}" if means else "-"
         lines.append(f"| `{spec.id}` | {spec.difficulty} | " + " | ".join(cells) + f" | {mean} |")
 
-    multi = [s for s in specs if s.issues]
+    multi = [s for s in specs if s.issues and any(r.task_id == s.id for m in models for r in runs[m])]
     if multi:
         lines += [
             "",
@@ -201,8 +201,6 @@ def main() -> None:
             "|---|---|" + "---|" * len(models),
         ]
         for spec in multi:
-            if not any(r.task_id == spec.id for m in models for r in runs[m]):
-                continue
             for issue in spec.issues:
                 cells = []
                 for m in models:
