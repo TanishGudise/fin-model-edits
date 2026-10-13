@@ -209,7 +209,7 @@ def _cheats(
     g: Generated, edits: dict, issues, ref_vals, task_c: dict, comp: Compiler
 ) -> dict[str, list[str]]:
     lay, ref = g.layout, g.ref
-    cheats: dict[str, list[str]] = {"nop": []}
+    cheats: dict[str, list[str]] = {}  # the empty answer is graded on its own, as the no-op
     cheats["pasted_values"] = _edit_lines(
         g,
         {
