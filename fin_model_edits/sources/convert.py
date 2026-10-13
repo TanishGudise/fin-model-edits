@@ -32,9 +32,10 @@ def _mark(style: str) -> str | None:
 
 
 class _Text(HTMLParser):
-    def __init__(self, blackline: bool) -> None:
+    def __init__(self, blackline: bool, collapse: bool = False) -> None:
         super().__init__(convert_charrefs=True)
         self.blackline = blackline
+        self.collapse = collapse
         self.out: list[str] = []
         self.stack: list[tuple[str, str | None, bool]] = []  # (tag, mark, hidden)
         self.mark: str | None = None
@@ -98,6 +99,9 @@ class _Text(HTMLParser):
         mark, hidden = self._state()
         if hidden:
             return
+        if self.collapse:
+            # a browser shows a line break in the source as a space; only block elements break lines
+            data = re.sub(r"[ \t\r\n\f]+", " ", data)
         if mark and data.strip():
             data = f"[{mark}: {data}]"
         self._emit(data)
@@ -129,10 +133,12 @@ def _merge_marks(text: str) -> str:
     return text
 
 
-def html_to_text(raw: str, blackline: bool = False) -> str:
+def html_to_text(raw: str, blackline: bool = False, collapse: bool = False) -> str:
     """Plain text of an EDGAR HTML document. `blackline` turns on the change markers; only marked-up
-    copies need it (elsewhere blue is just a hyperlink)."""
-    parser = _Text(blackline)
+    copies need it (elsewhere blue is just a hyperlink). `collapse` renders line breaks inside the
+    source text as spaces, as a browser does (the full-filing packets use it; the excerpt packets were
+    cut from text without it)."""
+    parser = _Text(blackline, collapse)
     parser.feed(raw)
     parser.close()
     lines = []

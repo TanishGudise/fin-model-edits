@@ -124,3 +124,48 @@ def test_tasks_build_with_their_evidence_in_the_documents():
     control = checks.search_baseline(parts, ISSUES["term_loan_margin"])
     assert control["found_by_search"]
     assert not checks.search_baseline(parts, ISSUES["leverage_gross_of_cash"])["found_by_search"]
+
+
+def test_amneal_actuals_tie_to_the_10k():
+    from fin_model_edits.gen.generate import _values
+    from fin_model_edits.recon.amneal import build_clean
+
+    v = _values(build_clean())
+    assert round(v[("ni", "FY2025A")], 3) == 127.933  # reported net income
+    assert round(v[("ebitda", "FY2025A")], 3) == 603.872  # the release's FY2025 EBITDA
+    assert round(v[("ta", "FY2025A")], 2) == 3678.28  # total assets, December 31, 2025
+    assert abs(v[("check", "FY2025A")]) < 1e-6
+
+
+def test_new_structure_is_absent_from_the_task_and_free_in_the_reference():
+    from fin_model_edits.recon.companies import company
+    from fin_model_edits.recon.make import make
+
+    co = company("amneal")
+    task_id = next(t for t, ids in co.tasks.items() if "tlb_addon_missing" in ids)
+    g = make(task_id)
+    for key in co.issues["tlb_addon_missing"].absent:
+        assert key not in g.model.lines and key in g.ref.lines
+        sheet, row = g.layout.rows[key] if key in g.layout.rows else (None, None)
+        if sheet:  # added below the sheet's last block
+            assert row > max(r for k, (s, r) in g.layout.rows.items() if s == sheet and k not in ("tl_draw",))
+
+
+needs_amneal = pytest.mark.skipif(
+    not all(check(d) for d in manifest("amneal")), reason="Amneal filings not downloaded"
+)
+
+
+@needs_amneal
+def test_amneal_evidence_is_in_the_full_filings():
+    from fin_model_edits.recon import checks
+    from fin_model_edits.recon.companies import company
+    from fin_model_edits.recon.make import make, notes_text
+
+    co = company("amneal")
+    parts = co.packet()
+    for task_id, ids in co.tasks.items():
+        g = make(task_id)
+        chains = {i: co.issues[i].chain for i in ids} | {k: d.evidence for k, d in co.decoys.items()}
+        assert checks.evidence_problems(parts, notes_text(g), chains) == []
+    assert checks.search_baseline(parts, co.issues["tlb_margin"])["found_by_search"]

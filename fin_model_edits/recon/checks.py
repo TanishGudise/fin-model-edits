@@ -11,6 +11,8 @@ obvious term    search the documents for the issue's obvious term and read the f
                 deciding quote in any of those windows
 number presence the planted wrong number appears in the documents too (a superseded or different
                 term), so "is this input in the documents?" can't flag it
+orphan rows     rows no formula reads in the task workbook but some formula reads in the reference: a
+                calculated line left dangling points at an issue without the documents (none allowed)
 """
 
 from __future__ import annotations
@@ -20,7 +22,7 @@ import re
 import openpyxl
 from openpyxl.utils import column_index_from_string
 
-from fin_model_edits.recon.issues import DocIssue
+from fin_model_edits.recon.base import DocIssue
 from fin_model_edits.recon.packet import Part
 
 WINDOW = 600
@@ -116,6 +118,41 @@ def evidence_problems(parts: list[Part], notes_text: str, issue_chains: dict) ->
             if ev.quote not in body:
                 problems.append(f"{name}: quote not in {ev.doc}: {ev.quote!r}")
     return problems
+
+
+_CELLREF = re.compile(
+    r"(?:(?P<sheet>[A-Za-z_][A-Za-z0-9_]*)!)?\$?(?P<c1>[A-Z]{1,3})\$?(?P<r1>\d+)"
+    r"(?::\$?(?P<c2>[A-Z]{1,3})\$?(?P<r2>\d+))?"
+)
+
+
+def _read_rows(wb) -> set[tuple[str, int]]:
+    """(sheet, row) of every cell some formula in another row reads."""
+    out = set()
+    for ws in wb:
+        for row in ws.iter_rows():
+            for c in row:
+                if not (isinstance(c.value, str) and c.value.startswith("=")):
+                    continue
+                for m in _CELLREF.finditer(c.value):
+                    sheet = m.group("sheet") or ws.title
+                    r1 = int(m.group("r1"))
+                    r2 = int(m.group("r2") or r1)
+                    for r in range(min(r1, r2), max(r1, r2) + 1):
+                        if (sheet, r) != (ws.title, c.row):
+                            out.add((sheet, r))
+    return out
+
+
+def orphan_rows(task_wb, ref_wb) -> list[str]:
+    """Rows nothing reads in the task but something reads in the reference."""
+    task_read, ref_read = _read_rows(task_wb), _read_rows(ref_wb)
+    rows = []
+    for sheet, r in sorted(ref_read - task_read):
+        ws = task_wb[sheet]
+        if any(c.value is not None for c in ws[r][1:]):
+            rows.append(f"{sheet}!{r} {ws.cell(r, 1).value!r}")
+    return rows
 
 
 def load(path) -> openpyxl.Workbook:

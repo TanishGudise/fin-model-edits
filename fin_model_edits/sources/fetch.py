@@ -83,8 +83,9 @@ def fetch(docs: list[Document], user_agent: str, log=print) -> None:
         log(f"fetched {doc.id} ({len(data):,} bytes)")
 
 
-def text(doc: Document) -> str:
+def text(doc: Document, collapse: bool = False) -> str:
     """The document as plain text (blackline markers kept for marked-up copies)."""
     if not check(doc):
         raise SourceError(f"{doc.id} is missing or changed; run scripts/fetch_sources.py first")
-    return html_to_text(path_of(doc).read_text(encoding="utf-8", errors="replace"), blackline=doc.blackline)
+    raw = path_of(doc).read_text(encoding="utf-8", errors="replace")
+    return html_to_text(raw, blackline=doc.blackline, collapse=collapse)

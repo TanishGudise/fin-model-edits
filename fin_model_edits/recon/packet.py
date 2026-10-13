@@ -20,13 +20,20 @@ class Part:
     doc: Document
     body: str
     """The excerpt text, as shown."""
+    full: bool = False
+    """The whole document as filed rather than an excerpt."""
 
     @property
     def header(self) -> str:
         d = self.doc
+        kind = (
+            "The full document as filed, converted to text."
+            if self.full
+            else (f"Excerpt: omitted text is marked {OMITTED}.")
+        )
         return (
             f"{d.title}\n{d.company} | {d.form} | filed {d.filed} | SEC accession {d.accession}\n{d.url}\n"
-            f"Excerpt: omitted text is marked {OMITTED}."
+            + kind
             + (
                 " Changes made by the amendment are marked [inserted: ...] and [deleted: ...]."
                 if d.blackline
@@ -176,6 +183,15 @@ def build(company: str = "hillman") -> list[Part]:
         "acquisition_close_release",
         [between(t, "Hillman Completes Acquisition of Kanebridge", "About Hillman Solutions Corp.")],
     )
+    for p in parts:
+        if bad := unbalanced_marks(p.body):
+            raise ValueError(f"{p.doc.id}: blackline markers don't close at offsets {bad[:5]}")
+    return parts
+
+
+def full_filings(company: str) -> list[Part]:
+    """Every manifest document in full, in filing order: what an analyst downloads from EDGAR."""
+    parts = [Part(d, text(d, collapse=True).strip(), full=True) for d in manifest(company)]
     for p in parts:
         if bad := unbalanced_marks(p.body):
             raise ValueError(f"{p.doc.id}: blackline markers don't close at offsets {bad[:5]}")
