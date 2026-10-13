@@ -79,3 +79,16 @@ def test_parallel_recalcs_do_not_interfere():
 
     with ThreadPoolExecutor(8) as pool:
         assert list(pool.map(one, range(16))) == [i * i for i in range(16)]
+
+
+def test_default_timeout_grows_with_the_batch(monkeypatch, tmp_path):
+    import fin_model_edits.recalc as recalc
+
+    seen = []
+    (tmp_path / "profile").mkdir()
+    monkeypatch.setattr(recalc, "_template_profile", lambda: tmp_path / "profile")
+    monkeypatch.setattr(recalc, "_run_soffice", lambda *args: seen.append(args[-1]) or (False, "stub", False))
+    recalc_sync([openpyxl.Workbook()])
+    recalc_sync([openpyxl.Workbook() for _ in range(5)])
+    recalc_sync([openpyxl.Workbook() for _ in range(5)], timeout=7)
+    assert seen == [recalc.RECALC_TIMEOUT_S, recalc.RECALC_TIMEOUT_S + 4 * recalc.PER_WORKBOOK_S, 7]
