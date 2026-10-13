@@ -4,13 +4,14 @@ or grade a task need LibreOffice and are skipped without it."""
 
 import json
 import os
+import random
 import re
 
 import pytest
 
 from fin_model_edits.edits import MAX_ROW, format_reply
 from fin_model_edits.gen.build import NAME_STEMS, SPLIT_SECTORS
-from fin_model_edits.gen.generate import LEVELS, SPLITS, generate, write
+from fin_model_edits.gen.generate import LEVELS, SPLITS, Rejected, _attempt, generate, task_seed, write
 from fin_model_edits.gen.layout import SPLIT_FAMILIES, cell_contents
 from fin_model_edits.gen.model import Evaluator
 from fin_model_edits.recalc import LibreOfficeMissing, soffice_path
@@ -249,11 +250,62 @@ def _task_hash(g) -> str:
     return h.hexdigest()[:16]
 
 
+# Levels 4-6 as of generator version 4: the six tasks that version 4 changed (an issue on a line that
+# repeats one cell's value, so a fill that doesn't shift was credited) and two of the pilot tasks.
+GOLDEN_LARGE = {
+    "train-l4-0012": "32604855d27fc127",
+    "train-l4-0026": "7d18052e0f0bb7f1",
+    "train-l5-0015": "aa2a7e6b332fca5a",
+    "test_ood-l4-0012": "de260c3f02d7187a",
+    "test_ood-l5-0012": "c778d06a54150e37",
+    "test_ood-l6-0017": "63eda85889e13bda",
+    "test_id-l5-0000": "0870f0322d789056",
+    "test_ood-l6-0000": "f34207ec226eff74",
+}
+
+
 def test_levels_1_to_3_are_unchanged():
     for task_id, want in GOLDEN_SMALL.items():
         split, level, index = task_id.rsplit("-", 2)
         g = generate(split, int(level[1:]), int(index))
         assert _task_hash(g) == want, task_id
+
+
+def test_levels_4_to_6_are_pinned():
+    for task_id, want in GOLDEN_LARGE.items():
+        split, level, index = task_id.rsplit("-", 2)
+        g = generate(split, int(level[1:]), int(index))
+        assert _task_hash(g) == want, task_id
+
+
+@pytest.mark.parametrize(
+    "task_id,attempt",
+    [("train-l4-0012", 2), ("train-l4-0026", 25), ("train-l5-0015", 2), ("test_ood-l4-0012", 2)],
+)
+def test_issue_on_a_line_flat_across_its_years_is_rejected(task_id, attempt):
+    # Accepted before: a two-year rollforward break on a line that is flat there in every variant (a
+    # term loan already repaid, capex equal to depreciation), so a fill that doesn't shift was credited;
+    # and a one-year pasted value on flat interest, where copying the year before's formula was credited.
+    split, level, index = task_id.rsplit("-", 2)
+    level, index = int(level[1:]), int(index)
+    seed = task_seed(split, level, index)
+    with pytest.raises(Rejected, match="doesn't shift"):
+        _attempt(split, level, index, seed, attempt, random.Random(f"{seed}/{attempt}"), LEVELS[level])
+
+
+@needs_libreoffice
+def test_generated_harbor_task_gives_the_verifier_time_per_issue(tmp_path):
+    import importlib.util
+    import tomllib
+
+    path = os.path.join(os.path.dirname(__file__), "..", "scripts", "build_harbor.py")
+    module = importlib.util.spec_from_file_location("build_harbor", path)
+    build_harbor = importlib.util.module_from_spec(module)
+    module.loader.exec_module(build_harbor)
+    spec = load_spec(write(generate("test_ood", 6, 0), tmp_path / "gen"))
+    build_harbor.write_task(spec, tmp_path / "harbor", spec.reference, "t", include_workbook=False)
+    toml = tomllib.loads((tmp_path / "harbor" / "task.toml").read_text())
+    assert toml["verifier"]["timeout_sec"] == 300.0 + 120.0 * len(spec.issues)
 
 
 def test_harbor_instruction_can_leave_the_workbook_out():
