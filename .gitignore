@@ -11,3 +11,6 @@ dist/
 
 # Generated task sets (scripts/generate.py); reproducible from their seeds
 generated/
+
+# Source documents downloaded by scripts/fetch_sources.py (public SEC filings; not redistributed)
+sources_cache/
