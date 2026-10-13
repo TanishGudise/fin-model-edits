@@ -23,7 +23,7 @@ from openpyxl import Workbook
 from openpyxl.utils import column_index_from_string, get_column_letter
 
 from fin_model_edits.edits import MAX_ROW
-from fin_model_edits.gen.expr import Across, Bin, Expr, Fn, In, Neg, Num, QSum, Ref, Sum, YRef
+from fin_model_edits.gen.expr import Across, Bin, Cmp, Expr, Fn, In, Neg, Num, QSum, Ref, Sum, YRef
 from fin_model_edits.gen.model import Model
 from fin_model_edits.workbook import FIXED_TIME
 
@@ -588,6 +588,15 @@ class Compiler:
             if pb < prec or (pb == prec and e.op in "-/^") or isinstance(b, Neg):
                 tb = f"({tb})"
             return f"{ta}{e.op}{tb}", prec
+        if isinstance(e, Cmp):
+            raise TypeError(f"a comparison outside IF's condition in {key}")
+        if isinstance(e, Fn) and e.name == "IF":
+            if len(e.args) != 3 or not isinstance(e.args[0], Cmp):
+                raise TypeError(f"IF needs a comparison and two branches in {key}")
+            c = e.args[0]
+            cond = f"{self._c(c.a, key, period, sheet0)[0]}{c.op}{self._c(c.b, key, period, sheet0)[0]}"
+            rest = [self._c(a, key, period, sheet0)[0] for a in e.args[1:]]
+            return f"IF({cond},{','.join(rest)})", ATOM
         if isinstance(e, Fn):
             args = [self._c(a, key, period, sheet0)[0] for a in e.args]
             return f"{e.name}({','.join(args)})", ATOM
@@ -734,7 +743,8 @@ SCHEDULE_RULES = [
     (
         "nol",
         "Tax losses carried forward offset taxable income up to the usage limit; tax is charged on what is "
-        "left, and the closing balance carries into the next year.",
+        "left, and the closing balance carries into the next year. A year with a pre-tax loss pays no tax "
+        "and adds nothing to the balance: this model does not carry new losses forward.",
     ),
     (
         "minority",

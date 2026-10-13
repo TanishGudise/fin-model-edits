@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 from fin_model_edits.gen.expr import (
     Across,
     Bin,
+    Cmp,
     Expr,
     Fn,
     In,
@@ -170,6 +171,17 @@ class Evaluator:
                 return a / b
             if e.op == "^":
                 return math.pow(a, b)
+        if isinstance(e, Cmp):
+            # LibreOffice gives TRUE/FALSE here, which only IF's condition treats like Python's 1/0
+            raise EvalError(f"a comparison outside IF's condition in {key}")
+        if isinstance(e, Fn) and e.name == "IF":
+            if len(e.args) != 3 or not isinstance(e.args[0], Cmp):
+                raise EvalError(f"IF needs a comparison and two branches in {key}")
+            c = e.args[0]
+            a, b = self.eval(c.a, key, period), self.eval(c.b, key, period)
+            cond = {">": a > b, ">=": a >= b, "<": a < b, "<=": a <= b}[c.op]
+            # like Excel, only the branch taken is evaluated
+            return self.eval(e.args[1] if cond else e.args[2], key, period)
         if isinstance(e, Fn):
             args = [self.eval(a, key, period) for a in e.args]
             if e.name == "MIN":

@@ -16,6 +16,7 @@ and Python in the validation.
     Sum(("sga", "rnd"))          lines added in the same period (SUM(range) when contiguous)
     Across("pv_fcf")             a scalar: the line summed over the forecast periods
     Fn("MIN", a, b), Fn("CHOOSE", In("case"), a, b)
+    Fn("IF", Cmp(">", a, b), x, y)   a comparison is only used as IF's condition
 """
 
 from __future__ import annotations
@@ -110,6 +111,18 @@ class Neg(Expr):
 
 
 @dataclass(frozen=True, eq=True)
+class Cmp(Expr):
+    op: str
+    """One of >, >=, <, <=."""
+    a: Expr
+    b: Expr
+
+    def __post_init__(self):
+        object.__setattr__(self, "a", lift(self.a))
+        object.__setattr__(self, "b", lift(self.b))
+
+
+@dataclass(frozen=True, eq=True)
 class Fn(Expr):
     name: str
     args: tuple[Expr, ...]
@@ -126,7 +139,7 @@ def refs(expr: Expr) -> list[Expr]:
     """Every leaf reference in the expression."""
     if isinstance(expr, Ref | In | YRef | QSum | Sum | Across):
         return [expr]
-    if isinstance(expr, Bin):
+    if isinstance(expr, Bin | Cmp):
         return refs(expr.a) + refs(expr.b)
     if isinstance(expr, Neg):
         return refs(expr.a)
@@ -141,6 +154,8 @@ def replace(expr: Expr, old: Expr, new: Expr) -> Expr:
         return new
     if isinstance(expr, Bin):
         return Bin(expr.op, replace(expr.a, old, new), replace(expr.b, old, new))
+    if isinstance(expr, Cmp):
+        return Cmp(expr.op, replace(expr.a, old, new), replace(expr.b, old, new))
     if isinstance(expr, Neg):
         return Neg(replace(expr.a, old, new))
     if isinstance(expr, Fn):
