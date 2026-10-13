@@ -116,12 +116,12 @@ pricing)."""
 
 LABEL_MAP = {
     # banker label -> the defined term (or provision) a competent analyst maps it to
-    "TLB (A3)": "Amendment No. 3 Term Loans (refinanced the Amendment No. 2 Term Loans on August 3, 2026)",
-    "TLB add-on (A4)": "New Incremental Term Loans (Amendment No. 4): more Amendment No. 3 Term Loans",
-    "TLB amort paid H1 FY2026 (A2)": "scheduled repayments of Term Loans in March and June 2026",
+    "TLB outstanding": "Amendment No. 3 Term Loans (refinanced the Amendment No. 2 Term Loans, Aug 3, 2026)",
+    "TLB add-on (Kashiv)": "New Incremental Term Loans (Amendment No. 4): more Amendment No. 3 Term Loans",
+    "TLB repaid Jan-Jun 2026": "the term loan balance change in the 10-Qs (repayments in March and June)",
     "Amort base": "Amendment No. 3 Term Loans outstanding on the Amendment No. 4 Effective Date (2.06(1))",
     "Amort % / qtr": "Section 2.06(1): 0.25% per fiscal quarter",
-    "Mand. amort": "scheduled repayments of Term Loans under Section 2.06",
+    "Sched. amort": "scheduled repayments of Term Loans under Section 2.06",
     "TLB margin": "Applicable Margin for Term Benchmark Loans",
     "SSN coupon": "interest rate on the 2032 Senior Notes (6.875% Senior Secured Notes due 2032)",
     "ABL margin": "Applicable Margin for SOFR Revolving Loans under the ABL Credit Agreement",
@@ -130,7 +130,7 @@ LABEL_MAP = {
     "Sweep threshold ($m)": "Section 2.08(2) proviso: the greater of $70.0 million and ...",
     "Sweep threshold, % of Credit EBITDA": "the Equivalent Percentage of $70.0 million (of Amendment No. 1 "
     "Effective Date EBITDA, $665,000,000)",
-    "Synergies a/b": "clause (g) of Consolidated EBITDA (run-rate cost savings and synergies, capped)",
+    "Synergy add-back": "clause (g) of Consolidated EBITDA (run-rate cost savings and synergies, capped)",
     "Credit EBITDA": "Consolidated EBITDA (TTM Consolidated EBITDA for the fiscal year)",
     "Net 1L debt": "Consolidated First Lien Net Debt",
     "1L net lev": "First Lien Net Leverage Ratio",
@@ -140,7 +140,7 @@ LABEL_MAP = {
     "Chg. NWC": "Excess Cash Flow clauses (1)(c) and (2)(e): decreases less increases in Working Capital",
     "ECF": "Excess Cash Flow",
     "Sweep % x ECF": "Section 2.08(2)(a): the Required Percentage of Excess Cash Flow",
-    "Less: mand. amort": "Section 2.08(2)(b)(ii)(2): scheduled repayments of Term Loans under Section 2.06",
+    "Less: sched. amort": "Section 2.08(2)(b)(ii)(2): scheduled repayments of Term Loans under Section 2.06",
     "Less: capex": "Section 2.08(2)(b)(iv): Capital Expenditures made in cash",
     "Sweep paydown": "the prepayment required by Section 2.08(2)",
 }
@@ -219,9 +219,9 @@ def build_clean() -> Model:
         _line(m, key, label, "inputs", SERIES[key], fmt=fmt, kind="series")
 
     term_labels = {
-        "tl_a3": ("TLB (A3)", "num"),
-        "tl_a4": ("TLB add-on (A4)", "num"),
-        "tl_h1": ("TLB amort paid H1 FY2026 (A2)", "num"),
+        "tl_a3": ("TLB outstanding", "num"),
+        "tl_a4": ("TLB add-on (Kashiv)", "num"),
+        "tl_h1": ("TLB repaid Jan-Jun 2026", "num"),
         "inst_pct": ("Amort % / qtr", "pct"),
         "tl_margin": ("TLB margin", "pct"),
         "ssn_rate": ("SSN coupon", "pct"),
@@ -237,7 +237,7 @@ def build_clean() -> Model:
     for key, (label, fmt) in term_labels.items():
         _line(m, key, label, "debt", {"": TERMS[key]}, fmt=fmt, kind="scalar_input")
     _line(m, "tl_orig", "Amort base", "debt", {"": In("tl_a3") + In("tl_a4")}, kind="scalar")
-    _line(m, "inst_n", "Mand. amort (no. of qtrs)", "debt", INST_N, fmt="int", kind="series")
+    _line(m, "inst_n", "Sched. amort (no. of qtrs)", "debt", INST_N, fmt="int", kind="series")
 
     # Income statement
     _line(
@@ -420,7 +420,7 @@ def build_clean() -> Model:
     _line(
         m,
         "inst_due",
-        "Mand. amort due",
+        "Sched. amort due",
         "debt",
         {
             "FY2026E": In("tl_h1") + In("tl_orig") * In("inst_pct") * Ref("inst_n"),
@@ -430,7 +430,7 @@ def build_clean() -> Model:
     _line(
         m,
         "cum_due",
-        "Mand. amort due, cum.",
+        "Sched. amort due, cum.",
         "debt",
         {"FY2026E": Ref("inst_due"), **{p: Ref("cum_due", -1) + Ref("inst_due") for p in F[1:]}},
     )
@@ -444,7 +444,7 @@ def build_clean() -> Model:
     _line(
         m,
         "inst_paid",
-        "Mand. amort",
+        "Sched. amort",
         "debt",
         _fc(
             lambda p: Fn(
@@ -479,7 +479,7 @@ def build_clean() -> Model:
     _line(
         m,
         "syn_a",
-        "Synergies a/b",
+        "Synergy add-back",
         "debt",
         _fc(lambda p: Fn("MIN", Ref("syn"), Ref("adj_ebitda") / 3)),
     )
@@ -500,7 +500,7 @@ def build_clean() -> Model:
     _line(m, "ecf", "ECF", "debt", _fc(lambda p: _sum("ecf_ni", "ecf_nc", "ecf_wc")))
     _line(m, "sweep_pct", "Sweep %", "debt", _fc(lambda p: _tiers(Ref("lev"))), fmt="pct")
     _line(m, "sw_gross", "Sweep % x ECF", "debt", _fc(lambda p: Ref("sweep_pct") * Ref("ecf")))
-    _line(m, "sw_amort", "Less: mand. amort", "debt", _fc(lambda p: -Ref("inst_paid")))
+    _line(m, "sw_amort", "Less: sched. amort", "debt", _fc(lambda p: -Ref("inst_paid")))
     _line(m, "sw_capex", "Less: capex", "debt", _fc(lambda p: Ref("cf_capex")))
     _line(
         m,
@@ -750,26 +750,24 @@ NOTES = [
     "midpoint where guidance is a range); later years use the growth, margin and capex assumptions.",
     "Kashiv (acquired August 10, 2026) is included from FY2026E. Its purchase price allocation, its "
     "contribution before closing (taken as nil) and the run-rate synergies are model assumptions.",
-    "Interest is charged on prior year-end balances at the current rates for the whole year (a "
-    "simplification for FY2026, when the term loan was repriced twice). Debt is shown at face value.",
+    "Interest is charged on prior year-end balances at the current margin and coupon for the whole year; "
+    "interest rate hedges are left out. Debt is shown at face value.",
     "Scheduled term loan repayments are counted in the fiscal year their payment date falls in.",
     "The ABL draws to keep cash at the minimum balance and repays from surplus cash. Its margin is held at "
     "the rate for the highest availability level, since the model never uses more than half the facility.",
-    "All interest and taxes are paid in cash in the year they are charged. Leverage is tested on year-end "
-    "balances and the year's figures.",
+    "All interest and taxes are paid in cash in the year they are charged. Every test the agreements apply "
+    "to a fiscal year (leverage, Excess Cash Flow, the prepayment) uses that year's figures and its year-end "
+    "balances.",
     "Consolidated Net Income is taken as net income including the noncontrolling interests' share. The "
     "Excess Cash Flow components the model has no line for (dispositions, hedges, non-cash credits, other "
     "long-term liability payments) are nil.",
-    "The Kashiv cash consideration was funded with borrowings, so it does not reduce the Excess Cash Flow "
-    "prepayment; capital expenditures and scheduled repayments are funded from operating cash. Tax "
-    "distributions to the noncontrolling holders do not reduce the prepayment.",
-    "Capital expenditures are deducted once, in the prepayment calculation; they are not also treated as "
-    "other cash expenditures in Excess Cash Flow.",
-    "Each year's Excess Cash Flow prepayment is calculated on that fiscal year's figures (where an "
-    "agreement measures EBITDA over the trailing twelve months, the fiscal year's) and made on the first "
-    "day of the next fiscal year, before that year's scheduled repayments.",
-    "The Borrower has made no elections and given no directions under the credit agreements, and has made no "
-    "voluntary prepayments; where an agreement lets the Borrower choose, the agreement's default applies.",
+    "The model does not deduct the Kashiv cash consideration in the Excess Cash Flow prepayment "
+    "calculation. Tax distributions to the noncontrolling holders do not reduce the prepayment.",
+    "Each year's Excess Cash Flow prepayment is made on the first day of the next fiscal year, before that "
+    "year's scheduled repayments.",
+    "The Borrower has given no directions on how prepayments are applied and has made no voluntary "
+    "prepayments; where an agreement lets the Borrower choose how a payment is applied, the agreement's "
+    "default applies.",
 ]
 SOURCED = {
     "g26_rev": "Q2 2026 results release (July 30, 2026): 2026 net revenue guidance $3.10-$3.20 billion",

@@ -255,7 +255,7 @@ file = "a20260803_repricingpacka.htm"
 url = "https://www.sec.gov/Archives/edgar/data/1723128/000162828026051900/a20260803_repricingpacka.htm"
 sha256 = "00f768f343e03d03c853fbf676b9b732787bd0b90500fe1673d1582233f1ce8a"
 bytes = 807469
-blackline = true
+blackline = false
 
 [[documents]]
 id = "form_10q_q2_2026"
