@@ -2,7 +2,7 @@
 
 Each task is fixed by (split, level, index), so a set is reproducible from this command alone:
 
-    uv run python scripts/generate.py --split test_ood --levels 1-5 --per-level 40 --out generated/test_ood
+    uv run python scripts/generate.py --split test_ood --levels 1-6 --per-level 40 --out generated/test_ood
 
 Splits: train (layouts A, C, E; software, industrial and retail companies), test_id (the same
 layouts and sectors, but other company names and seeds) and test_ood (held-out layouts B and D,

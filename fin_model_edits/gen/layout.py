@@ -723,10 +723,9 @@ SCHEDULE_RULES = [
     ),
     (
         "leases",
-        "Leases: right-of-use assets amortize straight-line over the lease life, lease liabilities are "
-        "repaid in equal principal over the lease life (a financing cash flow), and lease interest is "
-        "charged on the "
-        "opening liability.",
+        "Leases: each year's amortization is the opening right-of-use balance divided by the lease life, "
+        "each year's principal repayment is the opening lease liability divided by the lease life (a "
+        "financing cash flow), and lease interest is charged on the opening liability.",
     ),
     (
         "deferred_revenue",
