@@ -116,7 +116,7 @@ pricing)."""
 
 LABEL_MAP = {
     # banker label -> the defined term (or provision) a competent analyst maps it to
-    "TLB outstanding": "Amendment No. 3 Term Loans (refinanced the Amendment No. 2 Term Loans, Aug 3, 2026)",
+    "TLB outstanding, Jun 30, 2026": "the term loans that became Amendment No. 3 Term Loans on Aug 3, 2026",
     "TLB add-on (Kashiv)": "New Incremental Term Loans (Amendment No. 4): more Amendment No. 3 Term Loans",
     "TLB repaid Jan-Jun 2026": "the term loan balance change in the 10-Qs (repayments in March and June)",
     "Amort base": "Amendment No. 3 Term Loans outstanding on the Amendment No. 4 Effective Date (2.06(1))",
@@ -219,7 +219,7 @@ def build_clean() -> Model:
         _line(m, key, label, "inputs", SERIES[key], fmt=fmt, kind="series")
 
     term_labels = {
-        "tl_a3": ("TLB outstanding", "num"),
+        "tl_a3": ("TLB outstanding, Jun 30, 2026", "num"),
         "tl_a4": ("TLB add-on (Kashiv)", "num"),
         "tl_h1": ("TLB repaid Jan-Jun 2026", "num"),
         "inst_pct": ("Amort % / qtr", "pct"),
@@ -740,7 +740,7 @@ ECF_ROWS = [
     "sweep_amt",
 ]
 
-ADDED_ORDER = ["tl_a4", "eq_pct", "tl_draw", "sw_amort"]
+ADDED_ORDER = ["tl_a4", "eq_pct", "tl_draw"]
 """The order lines a task leaves out are added in, below the Debt sheet's last block."""
 
 NOTES = [
@@ -763,6 +763,8 @@ NOTES = [
     "long-term liability payments) are nil.",
     "The model does not deduct the Kashiv cash consideration in the Excess Cash Flow prepayment "
     "calculation. Tax distributions to the noncontrolling holders do not reduce the prepayment.",
+    "Capital expenditures are not treated as other cash expenditures under clause (2)(i) of the Excess "
+    "Cash Flow definition.",
     "Each year's Excess Cash Flow prepayment is made on the first day of the next fiscal year, before that "
     "year's scheduled repayments.",
     "The Borrower has given no directions on how prepayments are applied and has made no voluntary "

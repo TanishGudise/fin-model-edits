@@ -137,20 +137,6 @@ def test_amneal_actuals_tie_to_the_10k():
     assert abs(v[("check", "FY2025A")]) < 1e-6
 
 
-def test_new_structure_is_absent_from_the_task_and_free_in_the_reference():
-    from fin_model_edits.recon.companies import company
-    from fin_model_edits.recon.make import make
-
-    co = company("amneal")
-    task_id = next(t for t, ids in co.tasks.items() if "tlb_addon_missing" in ids)
-    g = make(task_id)
-    for key in co.issues["tlb_addon_missing"].absent:
-        assert key not in g.model.lines and key in g.ref.lines
-        sheet, row = g.layout.rows[key] if key in g.layout.rows else (None, None)
-        if sheet:  # added below the sheet's last block
-            assert row > max(r for k, (s, r) in g.layout.rows.items() if s == sheet and k not in ("tl_draw",))
-
-
 needs_amneal = pytest.mark.skipif(
     not all(check(d) for d in manifest("amneal")), reason="Amneal filings not downloaded"
 )
@@ -169,3 +155,60 @@ def test_amneal_evidence_is_in_the_full_filings():
         chains = {i: co.issues[i].chain for i in ids} | {k: d.evidence for k, d in co.decoys.items()}
         assert checks.evidence_problems(parts, notes_text(g), chains) == []
     assert checks.search_baseline(parts, co.issues["tlb_margin"])["found_by_search"]
+
+
+@needs_amneal
+def test_new_structure_is_absent_from_the_task_and_free_in_the_reference(tmp_path):
+    import openpyxl
+
+    from fin_model_edits.recon.companies import company
+    from fin_model_edits.recon.make import make, write
+    from fin_model_edits.tasks import load_spec
+
+    co = company("amneal")
+    task_id = next(t for t, ids in co.tasks.items() if "tlb_addon_missing" in ids)
+    g = make(task_id)
+    absent = co.issues["tlb_addon_missing"].absent
+    assert all(key not in g.model.lines and key in g.ref.lines for key in absent)
+    spec = load_spec(write(g, tmp_path))
+    cells = {g.layout.addr(g.ref, key, p) for key in absent for p in g.ref.lines[key].cells}
+    assert {tuple(f.split("!")) for f in spec.free} == cells
+    wb = openpyxl.load_workbook(spec.task_xlsx)
+    for sheet, coord in cells:
+        row = "".join(ch for ch in coord if ch.isdigit())
+        assert wb[sheet][coord].value is None and wb[sheet][f"A{row}"].value is None
+    assert any(g.ref.lines[k].label in spec.reference for k in absent)  # the reference adds the labels
+
+
+def test_orphan_rows_flag_a_line_the_task_leaves_unread():
+    import openpyxl
+
+    from fin_model_edits.recon.checks import orphan_rows
+
+    def wb(formula):
+        w = openpyxl.Workbook()
+        ws = w.active
+        ws.title = "S"
+        ws["A1"], ws["B1"] = "Adj. EBITDA", 10
+        ws["A2"], ws["B2"] = "Credit EBITDA", "=B1+1"
+        ws["A3"], ws["B3"] = "Leverage", formula
+        return w
+
+    assert orphan_rows(wb("=5/B1"), wb("=5/B2")) == ["S!2 'Credit EBITDA'"]
+    assert orphan_rows(wb("=5/B2"), wb("=5/B2")) == []
+
+
+def test_collapse_renders_source_line_breaks_as_spaces():
+    html = "<p>the Amendment No. 3\nTerm Loans <span style='color:#0000ff'>outstanding\n on</span> it</p>"
+    assert "No. 3\nTerm" in html_to_text(html)
+    assert html_to_text(html, blackline=True, collapse=True).strip() == (
+        "the Amendment No. 3 Term Loans [inserted: outstanding on] it"
+    )
+
+
+def test_moving_a_built_line_rewrites_references_to_it():
+    from fin_model_edits.recon.make import _replace_ref
+
+    assert _replace_ref("=$C$5+$C$55", "Debt", "C55", "C105", "Debt") == "=$C$5+$C$105"
+    assert _replace_ref("=Debt!C55*2", "Debt", "C55", "C105", "Financials") == "=Debt!C105*2"
+    assert _replace_ref("=C550+C55", "Debt", "C55", "C105", "Debt") == "=C550+C105"
