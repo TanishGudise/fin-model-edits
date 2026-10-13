@@ -205,7 +205,10 @@ def main() -> int:
     target.mkdir(parents=True, exist_ok=True)
     specs = load_specs(args.task_dir)
     if args.task_ids:
-        specs = tuple(s for s in specs if s.id in set(args.task_ids.split(",")))
+        wanted_ids = set(args.task_ids.split(","))
+        if unknown := wanted_ids - {s.id for s in specs}:
+            parser.error(f"unknown task ids: {', '.join(sorted(unknown))}")
+        specs = tuple(s for s in specs if s.id in wanted_ids)
     wanted = set(args.variant_names.split(",")) if args.variant_names else None
     for spec in specs:
         write_task(spec, target / spec.id, spec.reference, spec.id, not args.no_workbook)
