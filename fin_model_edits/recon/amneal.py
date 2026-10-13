@@ -592,7 +592,9 @@ def perturbations(m: Model) -> list[tuple[str, dict]]:
                 ("step_lo", ""): 2.9,
                 ("pct_hi", ""): 0.75,
                 ("pct_mid", ""): 0.5,
-                ("sw_floor", ""): 120.0,
+                # not the threshold's $70.0 million: the Equivalent Percentage is defined from it (70 / 665),
+                # so a reply that derives 10.5% from the floor and one that types it agree only while it holds
+                # (a typed $70.0 million still fails, on the floor's own input cell)
             },
         ),
     ]
