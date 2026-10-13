@@ -72,6 +72,17 @@ def test_blackline_markers_only_where_asked():
     assert "[inserted" not in plain and "0.25% of the total" in plain
 
 
+def test_older_blackline_styles():
+    html = (
+        "<p>Rate <strike>3.00%</strike><font color='#0000FF'>2.50%</font> and "
+        "<span style='border-bottom: 1px double #000'>New Term Loans</span> plus <s>old</s>.</p>"
+    )
+    assert html_to_text(html, blackline=True).strip() == (
+        "Rate [deleted: 3.00%][inserted: 2.50%] and [inserted: New Term Loans] plus [deleted: old]."
+    )
+    assert html_to_text(html).strip() == "Rate 3.00%2.50% and New Term Loans plus old."
+
+
 def test_manifest_records_each_filing():
     docs = manifest("hillman")
     assert len({d.id for d in docs}) == len(docs)
@@ -79,6 +90,17 @@ def test_manifest_records_each_filing():
         assert d.url.startswith("https://www.sec.gov/Archives/edgar/data/1822492/")
         assert d.accession.replace("-", "") in d.url and len(d.sha256) == 64
     assert [d.id for d in docs if d.blackline] == ["amendment_no_1"]
+
+
+def test_amneal_manifest_ships_the_amendments_as_filed():
+    docs = manifest("amneal")
+    assert len({d.id for d in docs}) == len(docs) == 26
+    for d in docs:
+        assert d.url.startswith("https://www.sec.gov/Archives/edgar/data/1723128/")
+        assert d.accession.replace("-", "") in d.url and len(d.sha256) == 64
+    ids = [d.id for d in docs]
+    for amendment in ("amendment_no_1", "amendment_no_2", "amendment_no_3", "amendment_no_4"):
+        assert amendment in ids
 
 
 needs_sources = pytest.mark.skipif(

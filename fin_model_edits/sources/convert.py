@@ -15,6 +15,8 @@ BLOCK = {"p", "div", "br", "tr", "li", "h1", "h2", "h3", "h4", "h5", "h6", "tabl
 CELL = {"td", "th"}
 SKIP = {"script", "style", "head", "title", "ix:header"}
 INSERTED_COLOURS = {"#0000ff", "#1100f0", "blue"}
+STRUCK_TAGS = {"s", "strike", "del"}
+"""Some blacklines strike text with a tag rather than a style."""
 VOID = {"br", "hr", "img", "meta", "link", "input", "col", "area", "base", "wbr"}
 
 
@@ -61,7 +63,16 @@ class _Text(HTMLParser):
             self.cell = []
         elif tag in BLOCK:
             self._emit("\n")
-        self.stack.append((tag, _mark(style) if self.blackline else None, hidden))
+        mark = _mark(style) if self.blackline else None
+        if self.blackline and tag in STRUCK_TAGS:
+            mark = "deleted"
+        elif self.blackline and mark is None:
+            # older blacklines colour with a FONT attribute and double-underline with a border
+            flat = style.replace(" ", "").lower()
+            coloured = (a.get("color") or "").lower() in INSERTED_COLOURS
+            if coloured or ("border-bottom" in flat and "double" in flat):
+                mark = "inserted"
+        self.stack.append((tag, mark, hidden))
 
     def handle_endtag(self, tag):
         if tag in VOID:
