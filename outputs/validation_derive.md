@@ -15,7 +15,7 @@ LibreOffice 26.8.1.1 bf6ef2662401c7d6dce671ab4deb26ee0af3a7c1. 1 task (hillman-c
 | cells cross-checked, Python vs LibreOffice (max diff) | 180 (4.9e-15) |
 | quoted filing rows found word for word | 62 |
 | reference ratio in each variant (no step within 0.05) | 2.356, 3.089, 2.723, 2.233, 2.356 |
-| prompt chars (closed-book form adds no documents) | 6,861 |
+| prompt chars (closed-book form adds no documents) | 7,178 |
 
 ## The answer
 
