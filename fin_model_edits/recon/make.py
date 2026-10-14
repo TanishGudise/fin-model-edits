@@ -96,7 +96,8 @@ def make(task_id: str) -> Generated:
         del task.lines[key]
     options = frozenset(o for i in ids for o in co.issues[i].options)
     perts = [Perturbation(name, changes) for name, changes in co.model.perturbations(clean)]
-    visible = _check(co, clean, ref, task, issues, perts, absent)
+    free_keys = {(k, p) for k in absent + _extra(co, ids) + _free_lines(co, ids) for p in ref.lines[k].cells}
+    visible = _check(co, clean, ref, task, issues, perts, absent, free_keys)
     return Generated(
         id=task_id,
         split="recon",
@@ -149,7 +150,13 @@ def _wrong_fixes(co: Company, ref, issue: Planted) -> list:
     return out
 
 
-def _check(co: Company, clean, ref, task, issues: list[Planted], perts, absent=()) -> list[bool]:
+def _free_lines(co: Company, ids: list[str]) -> tuple[str, ...]:
+    return tuple(k for i in ids for k in co.issues[i].free_lines)
+
+
+def _check(
+    co: Company, clean, ref, task, issues: list[Planted], perts, absent=(), free_keys=frozenset()
+) -> list[bool]:
     names = [p.name for p in perts]
     variants_ref = _variants(ref, perts)
     _sane(co, variants_ref, "reference", GAP, names)
@@ -165,7 +172,8 @@ def _check(co: Company, clean, ref, task, issues: list[Planted], perts, absent=(
         iso = _apply(ref, _isolated(clean, ref, i))
         iso_vals = _variants(iso, perts)
         _sane(co, iso_vals, f"{i.kind} alone", names=names)
-        cone = [_moved(r, v) for r, v in zip(variants_ref, iso_vals, strict=True)]
+        # cells a reply may build elsewhere aren't compared, so they can't be an issue's own cells
+        cone = [_moved(r, v) - free_keys for r, v in zip(variants_ref, iso_vals, strict=True)]
         if not any(cone):
             raise Rejected(f"{i.kind} moves nothing")
         cones.append(cone)
@@ -354,7 +362,7 @@ def write(g: Generated, out_dir: Path, documents: str | None = None) -> Path:
     if sorted(claimed) != sorted(edits) or len(set(claimed)) != len(claimed):
         raise RuntimeError(f"{g.id}: issue cells don't match the reference edits")
     extra = _extra(co, ids)
-    free = _sorted(g, {a for key in absent + extra for a in _absent_cells(g, key)})
+    free = _sorted(g, {a for key in absent + extra + _free_lines(co, ids) for a in _absent_cells(g, key)})
 
     comp = Compiler(g.ref, lay)
     pert_text = []
