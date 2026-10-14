@@ -2,7 +2,7 @@
 outputs/harbor_validation.md.
 
   oracle agent, ATTEMPTS trials per task      -> reward 1 every trial
-  nop agent, ATTEMPTS trials per task         -> reward 0 every trial
+  nop agent, ATTEMPTS trials per task         -> reward 0 every trial (1 on a task with no issue)
   oracle on each alternate, VARIANT_ATTEMPTS  -> reward 1 (correct answers written differently)
   oracle on each cheat, VARIANT_ATTEMPTS      -> reward 0 (plausible wrong answers)
 

@@ -174,11 +174,11 @@ def _tiers(lev: Expr) -> Expr:
 
 
 KB_PRE = -90.0
-SYN_2026 = 40.0
-"""FY2026 run-rate synergies in the judgement model (the earlier tasks' model has none that year)."""
 """Kashiv's EBITDA from January 1 to August 9, 2026 (before closing): a synthetic input (the filings give no
 standalone Kashiv results; Kashiv is a development-stage biosimilars business). Used only with the "judgement"
 option, whose reference applies the agreement's Pro Forma Basis (Section 1.08(2))."""
+SYN_2026 = 40.0
+"""FY2026 run-rate synergies in the judgement model (the earlier tasks' model has none that year)."""
 
 
 def build_clean(options=frozenset()) -> Model:
