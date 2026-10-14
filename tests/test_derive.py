@@ -153,3 +153,16 @@ def test_disclosure_needs_the_other_readings_ratio_and_percentage():
     edge = "Growth was 10%" + "." * 158 + "2.36x"
     assert edge.index("2.36x") - edge.index("10%") == 161
     assert not discloses(edge, "A")  # a percentage cut at the window's edge doesn't count as 0%
+    # the other reading's date is required too
+    assert not discloses(
+        only_a + " The December 27, 2025 period would give 2.35x and 0%.", "A"
+    )  # third reading
+    assert not discloses(
+        only_a + " Capex fell 0%; a downside case would put leverage at 2.36x.", "A"
+    )  # stray 0%
+    assert discloses(only_a + " For the period ended 27-Jun-2026 it would be 2.36x, so 0%.", "A")
+    assert discloses(only_a + " Using 06/27/2026 instead: 2.36x and 0%.", "A")
+    distant = (
+        only_a + " The other period ends June 27, 2026." + " Unrelated text." * 12 + " It gives 2.36x and 0%."
+    )
+    assert not discloses(distant, "A")  # the date must be near the ratio
