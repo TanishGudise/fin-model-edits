@@ -143,3 +143,5 @@ def test_disclosure_needs_the_other_readings_ratio_and_percentage():
     assert not discloses(wrong_numbers, "A")  # the other date, but not its result
     assert discloses("Ratio 2.36x, 0%. Under the March 28, 2026 reading it would be 2.55x and 25%.", "B")
     assert not discloses("Test Period ended June 27, 2026: 2.36x, so 0%.", "B")  # only its own result
+    far = "The June 27, 2026 reading gives 2.36x." + " Unrelated text." * 20 + " Capex fell 0% this year."
+    assert not discloses(far, "A")  # the percentage must be near the ratio
