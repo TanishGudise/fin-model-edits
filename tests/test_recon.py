@@ -240,6 +240,7 @@ def test_judgement_tasks_carry_notes_extra_lines_and_a_leave_alone_task(tmp_path
     assert len(json.loads((c.folder / "meta.json").read_text())["decoys"]) == 7
 
 
+@needs_amneal
 def test_leave_alone_grading_and_issue_credit(tmp_path):
     from fin_model_edits.detectors import detect
     from fin_model_edits.edits import format_reply
