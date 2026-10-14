@@ -15,6 +15,7 @@ Usage: python scripts/validate_derive.py [--out REPORT]"""
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 import tempfile
 import time
@@ -36,6 +37,7 @@ GAP = 0.05
 """No variant may put the reference ratio this close to a step: a correct answer written another way can't
 land on the other side."""
 TOL = 1e-6
+DIFF = re.compile(r"^=([A-Z]+[0-9]+)-([A-Z]+[0-9]+)$")
 
 CHEAT_ISSUE = {
     # the issue each cheat fakes: it must lose that issue
@@ -60,6 +62,8 @@ def python_values(cells: dict) -> dict:
 
     def get(coord: str) -> float:
         v = cells.get((d.SHEET, coord))
+        if isinstance(v, str) and (m := DIFF.match(v)):
+            return get(m[1]) - get(m[2])  # a quarter computed from the full-year and nine-month columns
         return float(v) if is_number(v) else 0.0
 
     out = {}
