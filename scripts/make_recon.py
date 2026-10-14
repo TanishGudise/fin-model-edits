@@ -21,8 +21,9 @@ def main() -> int:
     parser.add_argument("company", choices=SLUGS)
     parser.add_argument("out", type=Path)
     parser.add_argument("--documents", choices=("inline", "files", "absent"))
+    parser.add_argument("--only", help="write only the tasks whose id starts with this")
     args = parser.parse_args()
-    for folder in write_set(args.out, args.documents, args.company):
+    for folder in write_set(args.out, args.documents, args.company, args.only):
         print(folder)
     return 0
 
