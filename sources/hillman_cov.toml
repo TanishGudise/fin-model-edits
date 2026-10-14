@@ -1,0 +1,163 @@
+# Source documents for the derive-and-reconcile task: public SEC filings of Hillman Solutions Corp.
+# (CIK 1822492), the credit agreement and the filings its covenant test is derived from.
+# scripts/fetch_sources.py downloads them from EDGAR and checks each SHA-256; the documents themselves
+# are not in this repository.
+
+company = "Hillman Solutions Corp."
+cik = 1822492
+
+[[documents]]
+id = "form_10q_q3_2025"
+title = "Form 10-Q for the quarter ended September 27, 2025"
+form = "10-Q"
+filed = "2025-11-04"
+accession = "0001822492-25-000202"
+file = "hlm-20250927.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1822492/000182249225000202/hlm-20250927.htm"
+sha256 = "34c9ea7866424062da84390ad3bb998ceb6ef941944f86b3a042ede6d3d92b4c"
+bytes = 1756712
+blackline = false
+
+[[documents]]
+id = "form_10k_2025"
+title = "Form 10-K for the fiscal year ended December 27, 2025"
+form = "10-K"
+filed = "2026-02-17"
+accession = "0001822492-26-000019"
+file = "hlmn-20251227.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1822492/000182249226000019/hlmn-20251227.htm"
+sha256 = "71b3d405746b67a5b46c3ba589bc2c21bbc54dee7e6d829597464e530d1a0369"
+bytes = 2139181
+blackline = false
+
+[[documents]]
+id = "form_10q_q1_2026"
+title = "Form 10-Q for the quarter ended March 28, 2026"
+form = "10-Q"
+filed = "2026-04-28"
+accession = "0001822492-26-000084"
+file = "hlm-20260328.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1822492/000182249226000084/hlm-20260328.htm"
+sha256 = "a6403ab921a2fbcdae61b6540155b4bf43428e65278143e05cd9b691bac64073"
+bytes = 1135180
+blackline = false
+
+[[documents]]
+id = "refi_launch_release"
+title = "Press release: refinancing launch and preliminary Q2 2026 results"
+form = "8-K Exhibit 99.1"
+filed = "2026-07-13"
+accession = "0001822492-26-000116"
+file = "hillmanpr-debtrefiprelimre.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1822492/000182249226000116/hillmanpr-debtrefiprelimre.htm"
+sha256 = "0ebec9f4fc8f5b006f6274d94545581499a2e013ebf7377fd29a43defdcd58bb"
+bytes = 42639
+blackline = false
+
+[[documents]]
+id = "term_credit_agreement"
+title = "Credit Agreement (term loan), dated as of July 22, 2026"
+form = "8-K Exhibit 10.1"
+filed = "2026-07-22"
+accession = "0001822492-26-000122"
+file = "ex101-hillmanxtermcreditag.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1822492/000182249226000122/ex101-hillmanxtermcreditag.htm"
+sha256 = "4e6a274d88594c66064fee78afbc20c1098d60815a86aeb64b88c385442e4ed8"
+bytes = 1589533
+blackline = false
+
+[[documents]]
+id = "abl_credit_agreement"
+title = "ABL Credit Agreement, dated as of July 22, 2026"
+form = "8-K Exhibit 10.2"
+filed = "2026-07-22"
+accession = "0001822492-26-000122"
+file = "ex102-hillmanxablcreditagr.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1822492/000182249226000122/ex102-hillmanxablcreditagr.htm"
+sha256 = "d380ccd9c5636204da9ed1c8edfd84eb052dbe9fc0486198fd61295d341aa811"
+bytes = 2279987
+blackline = false
+
+[[documents]]
+id = "refi_8k"
+title = "Form 8-K, Item 1.01 (term and ABL credit agreements)"
+form = "8-K"
+filed = "2026-07-22"
+accession = "0001822492-26-000122"
+file = "hlmn-20260722.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1822492/000182249226000122/hlmn-20260722.htm"
+sha256 = "7294aeb2ac06f8a02b0d59438526b02473da73470b1bb048291de04b9a7b6dc1"
+bytes = 41763
+blackline = false
+
+[[documents]]
+id = "refi_close_release"
+title = "Press release: closing of $735 million Term Loan B and $375 million ABL"
+form = "8-K Exhibit 99.1"
+filed = "2026-07-22"
+accession = "0001822492-26-000122"
+file = "hillmanpr-debtreficlose07x.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1822492/000182249226000122/hillmanpr-debtreficlose07x.htm"
+sha256 = "d86ff151e79ad8a237c79610099bf30224fd80994f6fb455c9b5da605bdf0cfa"
+bytes = 11141
+blackline = false
+
+[[documents]]
+id = "q2_2026_release"
+title = "Press release: second quarter 2026 results and updated guidance"
+form = "8-K Exhibit 99.1"
+filed = "2026-08-04"
+accession = "0001822492-26-000135"
+file = "ex991hillmanq22026earnings.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1822492/000182249226000135/ex991hillmanq22026earnings.htm"
+sha256 = "a75581929d637d90bbf4debf21930b39ede5be973331f1b0f6c33d1bcb3dd737"
+bytes = 273488
+blackline = false
+
+[[documents]]
+id = "form_10q_q2_2026"
+title = "Form 10-Q for the quarter ended June 27, 2026"
+form = "10-Q"
+filed = "2026-08-04"
+accession = "0001822492-26-000137"
+file = "hlm-20260627.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1822492/000182249226000137/hlm-20260627.htm"
+sha256 = "4132a57c2d54a4a9734ababbef80ea704bca4f41b08d5b6622eea8ca6ae97961"
+bytes = 1581516
+blackline = false
+
+[[documents]]
+id = "amendment_no_1"
+title = "Amendment No. 1 to Credit Agreement, dated as of August 28, 2026 (with conformed Annex A)"
+form = "8-K Exhibit 10.1"
+filed = "2026-09-03"
+accession = "0001822492-26-000144"
+file = "ex101-hillmanxamendmentno1.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1822492/000182249226000144/ex101-hillmanxamendmentno1.htm"
+sha256 = "cd2255c6e73fc96d11d7d6f6296f3c1375bd993fa03e4431f89f224cc02a3a1b"
+bytes = 1548359
+blackline = true
+
+[[documents]]
+id = "amendment_8k"
+title = "Form 8-K, Items 1.01 and 2.01 (Amendment No. 1; completion of the acquisition)"
+form = "8-K"
+filed = "2026-09-03"
+accession = "0001822492-26-000144"
+file = "hlmn-20260828.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1822492/000182249226000144/hlmn-20260828.htm"
+sha256 = "b317b898f573ab0d4644e16a5b9f813ee41fed0c65625ad53757d2a1854308da"
+bytes = 32966
+blackline = false
+
+[[documents]]
+id = "acquisition_close_release"
+title = "Press release: Hillman completes acquisition of Kanebridge"
+form = "8-K Exhibit 99.1"
+filed = "2026-09-03"
+accession = "0001822492-26-000144"
+file = "hillmanprojectshoreclosing.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1822492/000182249226000144/hillmanprojectshoreclosing.htm"
+sha256 = "055793b40beb8b1f0ab759fdf3ed9bc0f51d72de575516f8af0dbd39fd42e9ef"
+bytes = 12827
+blackline = false
