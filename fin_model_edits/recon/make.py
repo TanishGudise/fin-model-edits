@@ -578,7 +578,7 @@ def _meta(co: Company, g: Generated, issues, parts, wb_task, wb_ref, documents: 
             }
             for p in parts
         ],
-        "synthetic": co.synthetic,
+        "synthetic": co.synthetic_of(g.id),
     }
     if free:
         out["free_cells"] = [f"{s}!{c}" for s, c in free]
