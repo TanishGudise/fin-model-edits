@@ -70,7 +70,7 @@ statements were available 85 days before closing. It is not in the accepted set.
   - 2Q25 taken as the first half;
   - reading B gross of cash.
 - Python matches LibreOffice on 180 cells per reading.
-- Harbor: 11 trials as expected.
+- Harbor: 11 trials as expected, run again on the final packages after the review.
 - Unit tests cover accepted readings, mixing, a mismatched statement and a date cell.
 
 After the gate, the review tightened the grading: more date forms are accepted, a statement naming both dates
