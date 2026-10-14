@@ -145,3 +145,11 @@ def test_disclosure_needs_the_other_readings_ratio_and_percentage():
     assert not discloses("Test Period ended June 27, 2026: 2.36x, so 0%.", "B")  # only its own result
     far = "The June 27, 2026 reading gives 2.36x." + " Unrelated text." * 20 + " Capex fell 0% this year."
     assert not discloses(far, "A")  # the percentage must be near the ratio
+    assert not discloses(
+        only_a + " Under June 27, 2026 it would be 2.36x and 25%.", "A"
+    )  # right ratio, wrong %
+    assert discloses(only_a + " Under June 27, 2026: 2.36:1.00, so 0 per cent.", "A")  # the agreement's form
+    assert discloses(only_a + " Under June 27, 2026: 2.36X and 0%.", "A")
+    edge = "Growth was 10%" + "." * 158 + "2.36x"
+    assert edge.index("2.36x") - edge.index("10%") == 161
+    assert not discloses(edge, "A")  # a percentage cut at the window's edge doesn't count as 0%
