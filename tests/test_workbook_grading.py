@@ -149,3 +149,20 @@ def test_cells_that_must_stay_empty_and_forbidden_statements():
         wb.save(path)
         result = grade_workbook_sync(path, spec)
         assert result.checks["kept_empty"] is False and result.checks["forbidden_absent"] is False
+
+
+def test_a_task_can_set_an_absolute_tolerance_for_some_cells():
+    """A certificate states ratios to two decimals: within a cell's tolerance a value matches; outside it,
+    or in a cell with no tolerance, matching stays exact."""
+    from dataclasses import replace
+
+    from fin_model_edits.grader import _compare, _tolerances
+
+    spec = replace(SPEC, tolerances=(("Cert!D29:D31", 0.005),))
+    tol = _tolerances(spec)
+    assert set(tol) == {("Cert", "D29"), ("Cert", "D30"), ("Cert", "D31")}
+    reference = {"Cert": {"D29": 3.574394, "D40": 78039.885}}
+    assert not _compare(reference, {"Cert": {"D29": 3.57, "D40": 78039.885}}, tol=tol)
+    assert _compare(reference, {"Cert": {"D29": 3.56, "D40": 78039.885}}, tol=tol)
+    assert _compare(reference, {"Cert": {"D29": 3.574394, "D40": 78040}}, tol=tol), "no tolerance: exact"
+    assert _compare(reference, {"Cert": {"D29": 3.57, "D40": 78039.885}}), "no tolerances given: exact"

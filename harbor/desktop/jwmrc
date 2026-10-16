@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<!-- JWM for the T4 desktop: click-to-focus, a taskbar listing the open windows, an empty root menu (no
+     launcher, no terminal), and every LibreOffice window maximized into the area above the taskbar. -->
+<JWM>
+  <RootMenu onroot="1"/>
+  <Tray x="0" y="-1" height="28" autohide="off">
+    <TaskList maxwidth="220"/>
+  </Tray>
+  <Group>
+    <Class>libreoffice</Class>
+    <Option>maximized</Option>
+  </Group>
+  <FocusModel>click</FocusModel>
+  <SnapMode distance="10">border</SnapMode>
+  <MoveMode>opaque</MoveMode>
+  <ResizeMode>opaque</ResizeMode>
+  <Desktops width="1" height="1"/>
+</JWM>

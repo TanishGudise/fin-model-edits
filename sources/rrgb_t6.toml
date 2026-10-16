@@ -1,0 +1,55 @@
+# Source documents for T6 (an equity cure across quarters; outputs/preregistration_v5.md): Red Robin
+# Gourmet Burgers' October 2, 2026 Credit Agreement, the 8-K that announced it, the 8-K on the August 2026
+# refranchising, and the second-quarter 2026 10-Q. Public SEC filings of Red Robin Gourmet Burgers, Inc.
+# (CIK 1171759); not stored in this repository.
+
+company = "Red Robin Gourmet Burgers, Inc."
+cik = 1171759
+
+[[documents]]
+id = "q2_2026_10q"
+title = "Quarterly report for the quarter ended July 12, 2026"
+form = "10-Q"
+filed = "2026-08-12"
+accession = "0001628280-26-056272"
+file = "rrgb-20260712.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1171759/000162828026056272/rrgb-20260712.htm"
+sha256 = "825b2dc60ffacb2e4eff52aaccfb81604cbc01934078178d4f2ba291a76c85e0"
+bytes = 1301213
+blackline = false
+
+[[documents]]
+id = "refranchising_8k"
+title = "Current report: completion of the refranchising of 116 restaurants (Items 2.01, 7.01)"
+form = "8-K"
+filed = "2026-09-01"
+accession = "0001628280-26-059804"
+file = "rrgb-20260826.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1171759/000162828026059804/rrgb-20260826.htm"
+sha256 = "26f9fe0766c4e3c7dea5b3c7d1c584b9d5c9643ad81e47fe1aa17bc67d5842b3"
+bytes = 42207
+blackline = false
+
+[[documents]]
+id = "credit_agreement_8k"
+title = "Current report: entry into the October 2, 2026 Credit Agreement (Items 1.01, 1.02, 2.03)"
+form = "8-K"
+filed = "2026-10-05"
+accession = "0001104659-26-113514"
+file = "tm2626832d1_8k.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1171759/000110465926113514/tm2626832d1_8k.htm"
+sha256 = "843a3fa73a52c656a84ccaf33c7e0f78ceff4d0d94cca6c1a5f6563ca30ea297"
+bytes = 36564
+blackline = false
+
+[[documents]]
+id = "credit_agreement"
+title = "Credit Agreement, dated as of October 2, 2026"
+form = "8-K Exhibit 10.1"
+filed = "2026-10-05"
+accession = "0001104659-26-113514"
+file = "tm2626832d1_ex10-1.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1171759/000110465926113514/tm2626832d1_ex10-1.htm"
+sha256 = "2d2d9d931c5b0df210e09fa067bab48c899b16197d8f7443ad870a773d540e9b"
+bytes = 1331895
+blackline = false

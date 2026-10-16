@@ -1,0 +1,270 @@
+# Source documents for the T2 candidate (a quarterly certificate schedule): Amneal Pharmaceuticals, Inc.'s
+# filings through August 6, 2026, the day the second-quarter financial statements were furnished (the Amneal
+# manifest less the four documents filed on August 10, 2026). Public SEC filings; not stored in this repository.
+
+company = "Amneal Pharmaceuticals, Inc."
+cik = 1723128
+
+[[documents]]
+id = "tl_8k_2023"
+title = "Form 8-K: new Term Loan Credit Agreement, amendment to the old term loan, ABL amendment"
+form = "8-K"
+filed = "2023-11-14"
+accession = "0001193125-23-277184"
+file = "d78181d8k.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000119312523277184/d78181d8k.htm"
+sha256 = "b65e955ac757bbef42cb7796a84fe791cd9892041cedd485c4834e5b7c156684"
+bytes = 37696
+blackline = false
+
+[[documents]]
+id = "tl_2018_amendment_no_2"
+title = "Amendment No. 2 to the 2018 Term Loan Credit Agreement (the facility being refinanced)"
+form = "8-K Exhibit 10.1"
+filed = "2023-11-14"
+accession = "0001193125-23-277184"
+file = "d78181dex101.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000119312523277184/d78181dex101.htm"
+sha256 = "95942d297c9efc658407220d0ee0268376cc45887b30785a64f8352b0eaa4afc"
+bytes = 1625564
+blackline = false
+
+[[documents]]
+id = "term_credit_agreement"
+title = "Term Loan Credit Agreement, dated as of November 14, 2023"
+form = "8-K Exhibit 10.2"
+filed = "2023-11-14"
+accession = "0001193125-23-277184"
+file = "d78181dex102.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000119312523277184/d78181dex102.htm"
+sha256 = "8bf7b303dc278b7637b117168a6da0b99fbf1aae93e860d2c0602fb5df4306ac"
+bytes = 1386583
+blackline = false
+
+[[documents]]
+id = "abl_amendment_1"
+title = "Amendment No. 1 to the Revolving Credit Agreement (with the amended agreement attached)"
+form = "8-K Exhibit 10.3"
+filed = "2023-11-14"
+accession = "0001193125-23-277184"
+file = "d78181dex103.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000119312523277184/d78181dex103.htm"
+sha256 = "d27f4a4bbca1671c87edea20144be18b1b82622db250f02d90debd21ebda96d9"
+bytes = 1812761
+blackline = true
+
+[[documents]]
+id = "notes_8k_2025"
+title = "Form 8-K: Amendment No. 1 term loans, senior secured notes due 2032, ABL amendment"
+form = "8-K"
+filed = "2025-08-01"
+accession = "0000950103-25-009701"
+file = "dp232462_8k.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000095010325009701/dp232462_8k.htm"
+sha256 = "d41f81a3df440f175e3b24937a8ef52e3f12c1616fc0ee4d0c8a9f1d8db2443a"
+bytes = 43097
+blackline = false
+
+[[documents]]
+id = "notes_indenture"
+title = "Indenture for the 6.875% Senior Secured Notes due 2032, dated as of August 1, 2025"
+form = "8-K Exhibit 4.1"
+filed = "2025-08-01"
+accession = "0000950103-25-009701"
+file = "dp232462_ex0401.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000095010325009701/dp232462_ex0401.htm"
+sha256 = "d97202c2de6cd6542df9f7c31c1656ff3f95b5f31eef0943d451b1d97deb802b"
+bytes = 1348635
+blackline = false
+
+[[documents]]
+id = "amendment_no_1"
+title = "Amendment No. 1 to Term Loan Credit Agreement (with the amended agreement attached as Annex II)"
+form = "8-K Exhibit 10.1"
+filed = "2025-08-01"
+accession = "0000950103-25-009701"
+file = "dp232462_ex1001.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000095010325009701/dp232462_ex1001.htm"
+sha256 = "cee60c1bd1b534b9e15bb872b55ec728fcb3c5701ab4d77f6d7d32231a42456c"
+bytes = 1663230
+blackline = true
+
+[[documents]]
+id = "abl_amendment_2"
+title = "Amendment No. 2 to Revolving Credit Agreement (with the amended agreement attached)"
+form = "8-K Exhibit 10.2"
+filed = "2025-08-01"
+accession = "0000950103-25-009701"
+file = "dp232462_ex1002.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000095010325009701/dp232462_ex1002.htm"
+sha256 = "88c083316fa079b78954ca12d797f556b45f8f951a4f93608ab8596f6ae59b55"
+bytes = 1776725
+blackline = true
+
+[[documents]]
+id = "amendment_8k_2"
+title = "Form 8-K: Amendment No. 2 to the Term Loan Credit Agreement"
+form = "8-K"
+filed = "2026-02-03"
+accession = "0001628280-26-004738"
+file = "amrx-20260202.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000162828026004738/amrx-20260202.htm"
+sha256 = "1ea8d2cb928149e100b8cdfd054dc4da54b73477e9950024b4e46b705c622b57"
+bytes = 32420
+blackline = false
+
+[[documents]]
+id = "amendment_no_2"
+title = "Amendment No. 2 to Term Loan Credit Agreement (with the amended agreement attached as Annex II)"
+form = "8-K Exhibit 10.1"
+filed = "2026-02-03"
+accession = "0001628280-26-004738"
+file = "amneal-amendmentno2toterml.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000162828026004738/amneal-amendmentno2toterml.htm"
+sha256 = "c9826b42249b6c533e1519c26a8e73ef3cd5ee3bcb4c7126e7a14d2befcafec0"
+bytes = 1890827
+blackline = true
+
+[[documents]]
+id = "form_10k_2025"
+title = "Form 10-K for the fiscal year ended December 31, 2025"
+form = "10-K"
+filed = "2026-02-27"
+accession = "0001723128-26-000011"
+file = "amrx-20251231.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000172312826000011/amrx-20251231.htm"
+sha256 = "52272000339c99244eba6d5ef382acff446480074511b8e3d1ebe4e1986cbb3b"
+bytes = 3470226
+blackline = false
+
+[[documents]]
+id = "kashiv_8k"
+title = "Form 8-K: agreement to acquire Kashiv BioSciences; preliminary first quarter 2026 results"
+form = "8-K"
+filed = "2026-04-22"
+accession = "0001193125-26-168231"
+file = "d126526d8k.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000119312526168231/d126526d8k.htm"
+sha256 = "864d66e8d73463953e197191445b5fc24b2ea6f029ab3661fa63f24da5e4d55c"
+bytes = 55379
+blackline = false
+
+[[documents]]
+id = "kashiv_purchase_agreement"
+title = "Membership Interest Purchase Agreement (Kashiv BioSciences), dated as of April 21, 2026"
+form = "8-K Exhibit 2.1"
+filed = "2026-04-22"
+accession = "0001193125-26-168231"
+file = "d126526dex21.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000119312526168231/d126526dex21.htm"
+sha256 = "ce647967cf2a207cdd5d160527a803d8eb17500fa008acf015740d480d2fbbe7"
+bytes = 864134
+blackline = false
+
+[[documents]]
+id = "kashiv_exhibit_10_1"
+title = "Exhibit 10.1 to the April 22, 2026 Form 8-K"
+form = "8-K Exhibit 10.1"
+filed = "2026-04-22"
+accession = "0001193125-26-168231"
+file = "d126526dex101.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000119312526168231/d126526dex101.htm"
+sha256 = "3aa503a013e19f3f1f65b27cf76d0659193f094c7fa08947f34ee821a83ebe20"
+bytes = 33139
+blackline = false
+
+[[documents]]
+id = "kashiv_exhibit_10_2"
+title = "Exhibit 10.2 to the April 22, 2026 Form 8-K"
+form = "8-K Exhibit 10.2"
+filed = "2026-04-22"
+accession = "0001193125-26-168231"
+file = "d126526dex102.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000119312526168231/d126526dex102.htm"
+sha256 = "fd8e1be6d58fb786923e60586cc3d4c75f4aa98f693f98ff54be48f8d72d2445"
+bytes = 33343
+blackline = false
+
+[[documents]]
+id = "kashiv_release"
+title = "Press release: acquisition of Kashiv BioSciences; preliminary first quarter 2026 results"
+form = "8-K Exhibit 99.1"
+filed = "2026-04-22"
+accession = "0001193125-26-168231"
+file = "d126526dex991.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000119312526168231/d126526dex991.htm"
+sha256 = "602b033782b570f7bcfd7bd70a5a02c964bb80f4e9c84c730c3b995cdcc03b61"
+bytes = 161198
+blackline = false
+
+[[documents]]
+id = "form_10q_q1_2026"
+title = "Form 10-Q for the quarter ended March 31, 2026"
+form = "10-Q"
+filed = "2026-05-07"
+accession = "0001723128-26-000020"
+file = "amrx-20260331.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000172312826000020/amrx-20260331.htm"
+sha256 = "e2d264465751b145348751cc18fb5e7e657102bfc59944a3fc57746692c70390"
+bytes = 1430558
+blackline = false
+
+[[documents]]
+id = "q2_2026_8k"
+title = "Form 8-K: second quarter 2026 results"
+form = "8-K"
+filed = "2026-07-30"
+accession = "0001723128-26-000025"
+file = "amrx-20260730.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000172312826000025/amrx-20260730.htm"
+sha256 = "9a619e162804304a76cca7a927be6e52207aaa42a2c25c3a5f9f2f95d1b4824c"
+bytes = 29234
+blackline = false
+
+[[documents]]
+id = "q2_2026_release"
+title = "Press release: second quarter 2026 results and updated guidance"
+form = "8-K Exhibit 99.1"
+filed = "2026-07-30"
+accession = "0001723128-26-000025"
+file = "amrx-q22026ex991.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000172312826000025/amrx-q22026ex991.htm"
+sha256 = "fb463a27de2ad0850969c6719e63e6c4cac27205c546a0be6990b9f8642af1fe"
+bytes = 639009
+blackline = false
+
+[[documents]]
+id = "amendment_8k_3"
+title = "Form 8-K: Amendment No. 3 to the Term Loan Credit Agreement"
+form = "8-K"
+filed = "2026-08-03"
+accession = "0001628280-26-051900"
+file = "amrx-20260803.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000162828026051900/amrx-20260803.htm"
+sha256 = "c80088068139b9419651f3d1ff41faa423c091da5748e92756510cecc2b759bd"
+bytes = 32411
+blackline = false
+
+[[documents]]
+id = "amendment_no_3"
+title = "Amendment No. 3 to Term Loan Credit Agreement (amended agreement attached as Annex II; the exhibit was filed as page images, and this text is their text layer, where struck and inserted text run together unmarked)"
+form = "8-K Exhibit 10.1"
+filed = "2026-08-03"
+accession = "0001628280-26-051900"
+file = "a20260803_repricingpacka.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000162828026051900/a20260803_repricingpacka.htm"
+sha256 = "00f768f343e03d03c853fbf676b9b732787bd0b90500fe1673d1582233f1ce8a"
+bytes = 807469
+blackline = false
+
+[[documents]]
+id = "form_10q_q2_2026"
+title = "Form 10-Q for the quarter ended June 30, 2026"
+form = "10-Q"
+filed = "2026-08-06"
+accession = "0001723128-26-000031"
+file = "amrx-20260630.htm"
+url = "https://www.sec.gov/Archives/edgar/data/1723128/000172312826000031/amrx-20260630.htm"
+sha256 = "b67b1d53a7140ec408b1c4f6dbb892394a8cb915d20e638bfaa1ffe49a442524"
+bytes = 2071091
+blackline = false
